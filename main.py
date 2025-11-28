@@ -1,5 +1,5 @@
 import sys
-from math import sin, cos, tan, radians, sqrt
+from math import sin, cos, tan, radians, sqrt, degrees
 from time import sleep, time
 
 import pygame
@@ -46,18 +46,17 @@ class Vector:
 
 
 class Input:
-    def __init__(self, _tilt: int, _mass: int, _velocity: float, _friction: float, _scale: int):
-        self.tilt_u = _tilt
+    def __init__(self, _tilt: float, _mass: int, _velocity: float, _friction: float, _scale: int):
+        self.tilt = _tilt
         self.mass_u = _mass
-        self.velocity_u = Vector(_velocity * cos(radians(_tilt)), _velocity * sin(radians(_tilt)))
-        self.tilt = radians(_tilt)
+        self.velocity_u = Vector(_velocity * cos(_tilt), -_velocity * sin(_tilt))
         self.mass = _mass * _scale
         self.velocity = Vector(self.velocity_u.x * _scale, self.velocity_u.y * _scale)
         self.friction = _friction
 
     def to_str_usr(self) -> str:
         return (f"User Input: "
-                f"tilt={self.tilt_u} "
+                f"tilt={self.tilt} "
                 f"mass={self.mass_u} "
                 f"velocity={self.velocity_u} "
                 f"friction={self.friction}")
@@ -112,14 +111,14 @@ class Cycle:
 
 
 class Result:
-    def __init__(self, cycle: Cycle, scale: int):
+    def __init__(self, cycle: Cycle | None, scale: int):
         self.number = cycle.number
         self.duration = cycle.end.time - cycle.start.time
         self.start_velocity = Vector(abs(cycle.start.velocity.x) / scale, -abs(cycle.start.velocity.y) / scale)
         self.end_velocity = Vector(-abs(cycle.end.velocity.x) / scale, abs(cycle.end.velocity.y) / scale)
         ## start -> middle distance
-        self.distance = Vector(abs(cycle.start.position.x - cycle.middle.position.x) / scale,
-                               -abs(cycle.start.position.y - cycle.middle.position.y) / scale)
+        self.reach = Vector(abs(cycle.start.position.x - cycle.middle.position.x) / scale,
+                            -abs(cycle.start.position.y - cycle.middle.position.y) / scale)
 
     def pretty_str(self) -> str:
         return f"RESULTS FOR CYCLE NR {self.number}\n" \
@@ -127,13 +126,30 @@ class Result:
                f"Starting with velocity: {self.start_velocity.to_str_translated()} m/s = {self.start_velocity.value()} m/s\n" \
                f"Ending with velocity: {self.end_velocity.to_str_translated()} m/s = {self.end_velocity.value()} m/s\n" \
                f"(velocity loss : {self.start_velocity.value() - self.end_velocity.value()} m/s)\n" \
-               f"Distance traveled from start to middle (reach) : {self.distance.to_str_translated()} m = {self.distance.value()} m\n"
+               f"Distance traveled from start to middle (reach) : {self.reach.to_str_translated()} m = {self.reach.value()} m\n"
+
+
+class ResultModel:
+    def __init__(self, _cycle_n: int, _start_velocity: Vector, _tilt: float, _fr: float,
+                 _g: float):
+        v1 = _start_velocity.value()
+        self.number = _cycle_n
+        self.duration = ((2 * v1) / (_g * (sin(_tilt) + _fr * cos(_tilt))))
+        self.start_velocity = _start_velocity
+        end_velocity_value = (2*tan(_tilt) - _fr) / (2 * (_fr + tan(_tilt)))
+        if end_velocity_value < 0:
+            self.end_velocity = Vector(0, 0)
+        else:
+            end_velocity_value = v1 * sqrt(end_velocity_value)
+            self.end_velocity = Vector(-cos(_tilt) * end_velocity_value, sin(_tilt) * end_velocity_value)
+        reach_value = v1 ** 2 / (2 * _g * (_fr * cos(_tilt) + sin(_tilt)))
+        self.reach = Vector(cos(_tilt) * reach_value, -sin(_tilt) * reach_value)
 
 
 def init_space(inp: Input, settings: Settings) -> tuple[Space, Body]:
     print("Initializing space.")
     _space = pymunk.Space()
-    _space.gravity = settings.gravity.translated()
+    _space.gravity = settings.gravity.x, settings.gravity.y
 
     slope = pymunk.Segment(_space.static_body, translate_abs(50, 0),
                            translate_abs(5000, tan(inp.tilt) * 5000), 4)
@@ -171,8 +187,7 @@ def simulate(space: Space, block: Body, inp: Input, settings: Settings) -> tuple
     draw_options = pymunk.pygame_util.DrawOptions(display)
     clock = pygame.time.Clock()
 
-    vx, vy = inp.velocity.translated()
-    block.apply_impulse_at_world_point((vx * inp.mass, vy * inp.mass), translate_abs(0, 0))
+    block.apply_impulse_at_world_point((inp.velocity.x * inp.mass, inp.velocity.y * inp.mass), translate_abs(0, 0))
 
     pygame.init()
     print("--SIMULATION START--")
@@ -193,6 +208,8 @@ def simulate(space: Space, block: Body, inp: Input, settings: Settings) -> tuple
     )
 
     running = True
+    collisions.append(Measurement(round(time(), 2), block.position, block.velocity))
+    print(collisions[-1].to_str_col())
     while running:
         curr_time = round(time(), 2)
         for event in pygame.event.get():
@@ -216,6 +233,7 @@ def simulate(space: Space, block: Body, inp: Input, settings: Settings) -> tuple
     print(f"end time={round(time(), 2)}")
     print(f"detected wall-block collisions={len(collisions)}")
     print(f"detected stops={len(measurements)}")
+    pygame.quit()
     return collisions, measurements
 
 
@@ -232,7 +250,7 @@ def collect_cycles(measurements: list[Measurement], collisions: list[Measurement
                 measurement = measurements[measurement_ndx]
             measurement_ndx += 1
         if measurement.time != -1:
-            cycles.append(Cycle(i + 1, start, measurement, end))
+            cycles.append(Cycle(i, start, measurement, end))
     return cycles
 
 
@@ -242,6 +260,18 @@ def retrieve_results(measurements: list[Measurement], collisions: list[Measureme
     for cycle in cycles:
         results.append(Result(cycle, scale))
     return results
+
+
+def calculate_theoretical_model(inp: Input, settings: Settings) -> tuple[list[ResultModel], bool]:
+    g = abs(settings.gravity.y / settings.scale)
+    results = [ResultModel(0, inp.velocity_u, inp.tilt, inp.friction, g)]
+    if (inp.friction * cos(inp.tilt)) / (sin(inp.tilt)) >= 1:
+        return results, False
+    i = 1
+    while results[-1].end_velocity.value() > 0.1:
+        results.append(ResultModel(i, Vector(-results[-1].end_velocity.x, -results[-1].end_velocity.y), inp.tilt, inp.friction, g))
+        i += 1
+    return results, True
 
 
 def gen_ascii():
@@ -258,14 +288,15 @@ InclinedPlaneProject v{VERSION}
     """
 
 
-
 def main():
     print(gen_ascii())
-    settings = Settings(10, Vector(0, -98.1), RESOLUTION, 40, 50)
-    inp = Input(80, 1, 20, 0.5, settings.scale)
+    settings = Settings(10, Vector(0, 98.1), RESOLUTION, 40, 50)
+    inp = Input(radians(80), 5, 20, 0.5, settings.scale)
     print(inp.to_str_usr())
     print(inp)
     print(settings)
+
+    model, is_cycle = calculate_theoretical_model(inp, settings)
 
     space, block = init_space(inp, settings)
     collisions, measurements = simulate(space, block, inp, settings)
@@ -275,7 +306,7 @@ def main():
     print(
         f"---RESULTS---\n"
         f"Input data:\n"
-        f"Slope angle = {inp.tilt_u} degrees (= {inp.tilt} rad)\n"
+        f"Slope angle = {inp.tilt} rad (= {degrees(inp.tilt)} degrees)\n"
         f"Start velocity vector (parallel to slope) = {inp.velocity_u.value()} m/s (= {inp.velocity_u.to_str_translated()} m/s)\n"
         f"Mass of the block = {inp.mass} kg\n"
         f"Dynamic friction coefficient between block and slope (Coulomb friction model) = {inp.friction}\n"
@@ -291,8 +322,6 @@ def main():
     )
     for result in results:
         print(result.pretty_str())
-
-    pygame.quit()
 
 
 main()
