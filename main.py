@@ -9,7 +9,7 @@ from pymunk import Arbiter, Space, Vec2d, Body
 VERSION = "1.0 BETA"
 RESOLUTION = (800, 800)
 
-D = 1e-6
+D = 1e-10
 
 UNIT_VELOCITY = "m/s"
 UNIT_ACCELERATION = "m/s^2"
@@ -26,14 +26,11 @@ def translate(x: float, y: float):
     return x, -y
 
 
-def str_time(t: float):
-    if t < D:
-        return "dt"
-    return t
+def time_str(t) -> str:
+    return f"{t}{UNIT_TIME}"
 
 
 class Vector:
-
     def __init__(self, _x: float, _y: float, _unit: str):
         self.x = 0 if abs(_x) < D else _x
         self.y = 0 if abs(_y) < D else _y
@@ -60,15 +57,31 @@ class Vector:
     def str_value(self) -> str:
         return f"{self.value}{self.unit}"
 
+    def __mul__(self, other: int | float):
+        return Vector(self.x * other, self.y * other, self.unit)
+
 
 class Input:
-    def __init__(self, _tilt: float, _mass: int, _velocity: float, _friction: float, _scale: int):
+    @staticmethod
+    def verify_input(tilt: float, mass: float, velocity: float, friction: float):
+        pass
+
+    def __init__(self, _tilt: float, _mass: float, _velocity: float, _friction: float, _scale: int):
+        self.verify_input(_tilt, _mass, _velocity, _friction)
+
         self.tilt = _tilt
         self.mass_u = _mass
         self.velocity_u = Vector(_velocity * cos(_tilt), _velocity * sin(_tilt), UNIT_VELOCITY)
         self.mass = _mass * _scale
         self.velocity = Vector(self.velocity_u.x * _scale, self.velocity_u.y * _scale, UNIT_VELOCITY)
         self.friction = _friction
+
+    def pretty_str(self):
+        return f"Input data:\n" \
+               f"Slope angle = {self.tilt} rad (= {degrees(self.tilt)} degrees)\n" \
+               f"Start velocity vector (parallel to slope) = {self.velocity_u} ({self.velocity_u.str_value()})\n" \
+               f"Mass of the block* = {self.mass_u}{UNIT_MASS}\n" \
+               f"Dynamic friction coefficient between block and slope (Coulomb friction model) = {self.friction}\n"
 
     def to_str_usr(self) -> str:
         return (f"User Input: "
@@ -89,7 +102,7 @@ class Settings:
     def __init__(self, _scale: int, _gravity: Vector, _resolution: tuple[int, int], _block_size: int, _precision: float,
                  _fps: int):
         self.scale = _scale
-        self.gravity = Vector(_gravity.x * _scale, _gravity.y * _scale, UNIT_ACCELERATION)
+        self.gravity = _gravity * _scale
         self.resolution = _resolution
         self.block_size = _block_size
         self.precision = _precision * _scale
@@ -103,7 +116,7 @@ class Settings:
 
 class Measurement:
     def __init__(self, _time: float, _position: Vec2d, _velocity: Vec2d):
-        self.time = _time
+        self.time = 0 if abs(_time) < D else _time
         x, y = translate_abs(_position.x, _position.y)
         self.position = Vector(x, y, UNIT_DISTANCE)
         x, y = translate(_velocity.x, _velocity.y)
@@ -131,62 +144,94 @@ class Cycle:
         self.end = _end_collision
 
 
-class Result:
+class ResultMeasured:
     def __init__(self, cycle: Cycle, scale: int, is_full: bool):
         self.number = cycle.number
         self.is_full = is_full
         self.duration1 = cycle.middle.time - cycle.start.time
 
         if not is_full:
-            self.duration2 = float("inf")
+            self.duration2 = -1
         else:
             self.duration2 = cycle.end.time - cycle.middle.time
-        self.start_velocity = Vector(cycle.start.velocity.x / scale, cycle.start.velocity.y / scale, UNIT_VELOCITY)
+        self.start_velocity = Vector(abs(cycle.start.velocity.x / scale), abs(cycle.start.velocity.y / scale),
+                                     UNIT_VELOCITY)
         self.end_velocity = Vector(cycle.end.velocity.x / scale, cycle.end.velocity.y / scale, UNIT_VELOCITY)
-        ## start -> middle distance
+        # start -> middle distance
         self.reach = Vector(abs(cycle.start.position.x - cycle.middle.position.x) / scale,
                             abs(cycle.start.position.y - cycle.middle.position.y) / scale, UNIT_DISTANCE)
-
-    def pretty_str(self) -> str:
-        _str = f"RESULTS FOR CYCLE NR {self.number}\n"
-
-        if not self.is_full:
-            _str += f"(NOT FULL CYCLE)\n"
-        _str += f"Duration from start to middle: {self.duration1} {UNIT_TIME}\n" \
-                f"Duration from middle to end: {self.duration2} {UNIT_TIME}\n"
-        if self.is_full:
-            _str += f"(Full duration {self.duration1 + self.duration2} {UNIT_TIME})\n"
-
-        return _str + f"Starting with velocity: {self.start_velocity} = {self.start_velocity.str_value()}\n" \
-                      f"Ending with velocity: {self.end_velocity} = {self.end_velocity.str_value()}\n" \
-                      f"(velocity loss : {self.start_velocity.value - self.end_velocity.value}{UNIT_VELOCITY}\n" \
-                      f"Distance traveled from start to middle (reach) : {self.reach} = {self.reach.str_value()} \n"
 
 
 class ResultModel:
     def __init__(self, _cycle_n: int, _start_velocity: Vector, _tilt: float, _fr: float, _g: float, _is_full: bool):
         v1 = _start_velocity.value
-        reach_value = v1 ** 2 / (2 * _g * (_fr * cos(_tilt) + sin(_tilt)))
-        end_velocity_value = (2 * tan(_tilt) - _fr) / (2 * (_fr + tan(_tilt)))
+        reach_value = (v1 ** 2) / (2 * _g * (_fr * cos(_tilt) + sin(_tilt)))
+        end_velocity_co = (2 * tan(_tilt) - _fr) / (2 * (_fr + tan(_tilt)))
 
         self.number = _cycle_n
         self.is_full = _is_full
-        self.duration1 = v1 / (_g * (sin(_tilt) + _fr * cos(_tilt)))
-
-        if not _is_full:
-            self.duration2 = -1
-        else:
-            self.duration2 = end_velocity_value / (_g * (sin(_tilt) - _fr * cos(_tilt)))
 
         self.start_velocity = _start_velocity
-
         if not _is_full:
             self.end_velocity = Vector(0, 0, UNIT_VELOCITY)
         else:
-            end_velocity_value = v1 * sqrt(end_velocity_value)
-            self.end_velocity = Vector(-cos(_tilt) * end_velocity_value, sin(_tilt) * end_velocity_value, UNIT_VELOCITY)
+            end_velocity_co = v1 * sqrt(end_velocity_co)
+            self.end_velocity = Vector(-cos(_tilt) * end_velocity_co, -sin(_tilt) * end_velocity_co, UNIT_VELOCITY)
 
-        self.reach = Vector(cos(_tilt) * reach_value, -sin(_tilt) * reach_value, UNIT_DISTANCE)
+        self.duration1 = v1 / (_g * (sin(_tilt) + _fr * cos(_tilt)))
+        if not _is_full:
+            self.duration2 = -1
+        else:
+            self.duration2 = self.end_velocity.value / (_g * (sin(_tilt) - _fr * cos(_tilt)))
+
+        self.reach = Vector(cos(_tilt) * reach_value, sin(_tilt) * reach_value, UNIT_DISTANCE)
+
+
+class Error:
+    @staticmethod
+    def vector_error(vec: Vector, vec0: Vector) -> Vector:
+        return Vector(abs(vec.x - vec0.x), abs(vec.y - vec0.y), vec.unit)
+
+    @staticmethod
+    def scalar_error(x: float, x0: float) -> float:
+        return abs(x - x0)
+
+    @staticmethod
+    def vector_relative_error(e: Vector, v: Vector) -> tuple[float, float]:
+        return e.x / v.x if v.x != 0 else float("NaN"), e.y / v.y if v.y != 0 else float("NaN")
+
+    @staticmethod
+    def vector_val_relative_error(e: Vector, v: Vector) -> float:
+        return e.value / v.value if v.value != 0 else float("NaN")
+
+    @staticmethod
+    def scalar_relative_error(e: float, v: float) -> float:
+        return e / v if v != 0 else float("NaN")
+
+    def __init__(self, measure: ResultMeasured, model: ResultModel):
+        self.duration1 = self.scalar_error(model.duration1, measure.duration1)
+        self.duration1_rel = self.scalar_relative_error(self.duration1, measure.duration1)
+        self.duration2 = self.scalar_error(model.duration2, measure.duration2)
+        self.duration2_rel = self.scalar_relative_error(self.duration2, measure.duration2)
+
+        if measure.is_full:
+            self.duration = self.duration1
+            self.duration_rel = self.duration1_rel
+        else:
+            self.duration = self.scalar_error(model.duration1 + model.duration2, measure.duration1 + measure.duration2)
+            self.duration_rel = self.scalar_relative_error(self.duration, measure.duration1 + measure.duration2)
+
+        self.start_velocity = self.vector_error(model.start_velocity, measure.start_velocity)
+        self.start_velocity_rel = self.vector_relative_error(self.start_velocity, measure.start_velocity)
+        self.start_velocity_value_rel = self.vector_val_relative_error(self.start_velocity, measure.start_velocity)
+
+        self.end_velocity = self.vector_error(model.end_velocity, measure.end_velocity)
+        self.end_velocity_rel = self.vector_relative_error(self.end_velocity, measure.end_velocity)
+        self.end_velocity_value_rel = self.vector_val_relative_error(self.end_velocity, measure.end_velocity)
+
+        self.reach = self.vector_error(model.reach, measure.reach)
+        self.reach_rel = self.vector_relative_error(self.reach, measure.reach)
+        self.reach_value_rel = self.vector_val_relative_error(self.reach, measure.reach)
 
 
 def init_space(inp: Input, settings: Settings) -> tuple[Space, Body]:
@@ -194,9 +239,9 @@ def init_space(inp: Input, settings: Settings) -> tuple[Space, Body]:
     space = pymunk.Space()
     space.gravity = settings.gravity.translated()
 
-    slope = pymunk.Segment(space.static_body, translate_abs(50, 0),
+    plane = pymunk.Segment(space.static_body, translate_abs(50, 0),
                            translate_abs(5000, tan(inp.tilt) * 5000), 4)
-    slope.friction = 1
+    plane.friction = 1
 
     wall = pymunk.Segment(space.static_body, translate_abs(100, 0),
                           translate_abs(0, (100 / tan(inp.tilt))), 4)
@@ -215,7 +260,7 @@ def init_space(inp: Input, settings: Settings) -> tuple[Space, Body]:
     block.friction = inp.friction
     block.collision_type = 1
 
-    space.add(block_body, block, slope, wall)
+    space.add(block_body, block, plane, wall)
     print(f"Initialized space. gravity={space.gravity}")
     return space, block_body
 
@@ -231,7 +276,8 @@ def simulate(space: Space, block: Body, inp: Input, settings: Settings, model_cy
     draw_options = pymunk.pygame_util.DrawOptions(display)
     clock = pygame.time.Clock()
 
-    block.apply_impulse_at_world_point((inp.velocity.x * inp.mass, inp.velocity.y * inp.mass), translate_abs(0, 0))
+    vx, vy = inp.velocity.translated()
+    block.apply_impulse_at_world_point((vx * inp.mass, vy * inp.mass), translate_abs(0, 0))
 
     collisions: list[Measurement] = []
     measurements: list[Measurement] = []
@@ -307,17 +353,17 @@ def collect_cycles(measurements: list[Measurement], collisions: list[Measurement
     return cycles
 
 
-def retrieve_results(measurements: list[Measurement], collisions: list[Measurement], scale: int, is_full: bool) -> list[
-    Result]:
+def retrieve_results(measurements: list[Measurement], collisions: list[Measurement], scale: int, is_full: bool) \
+        -> list[ResultMeasured]:
     results = []
     cycles = collect_cycles(measurements, collisions)
     for cycle in cycles:
-        results.append(Result(cycle, scale, is_full))
+        results.append(ResultMeasured(cycle, scale, is_full))
     return results
 
 
 def calculate_theoretical_model(inp: Input, settings: Settings) -> list[ResultModel]:
-    g = abs(settings.gravity.y)
+    g = abs(settings.gravity.y / settings.scale)
     if (inp.friction * cos(inp.tilt)) / (sin(inp.tilt)) >= 1:
         return [ResultModel(0, inp.velocity_u, inp.tilt, inp.friction, g, False)]
     results = [ResultModel(0, inp.velocity_u, inp.tilt, inp.friction, g, True)]
@@ -328,6 +374,52 @@ def calculate_theoretical_model(inp: Input, settings: Settings) -> list[ResultMo
                         inp.friction, g, True))
         i += 1
     return results
+
+
+def result_vector_str(measure: Vector, model: Vector, error: Vector, error_r: tuple[float, float], error_r_v: float):
+    return f"{measure} = {measure.str_value()} || {model} = {model.str_value()}\n" \
+           f"error = {error} ({error_r[0] * 100}%, {error_r[1] * 100}%) = {error.str_value()} ({error_r_v * 100}%)\n"
+
+
+def result_scalar_str(measure: str, model: str, error: str, error_r: float):
+    return f"{measure} || {model}\n" \
+           f"Error = {error} ({error_r * 100}%)\n"
+
+
+def result_str(measure: ResultMeasured, model: ResultModel, error: Error):
+    s = f"***CYCLE NUMBER {model.number}***\n"
+    if not model.is_full:
+        s += "(This cycle is NOT FULL. Block has stopped in the middle of the cycle.)\n"
+    s += "DURATION\nFrom start to middle = " + result_scalar_str(time_str(measure.duration1),
+                                                                 time_str(model.duration1),
+                                                                 time_str(error.duration1),
+                                                                 error.duration1_rel)
+    s += "From middle to end = " + result_scalar_str(time_str(measure.duration2 if model.is_full else "NaN "),
+                                                     time_str(model.duration2 if model.is_full else "NaN "),
+                                                     time_str(error.duration2),
+                                                     error.duration2_rel)
+    s += "Full = " + result_scalar_str(
+        time_str(measure.duration1 + measure.duration2 if model.is_full else measure.duration1),
+        time_str(model.duration1 + model.duration2 if model.is_full else model.duration1),
+        time_str(error.duration),
+        error.duration_rel
+    )
+    s += f"START VELOCITY\n" + result_vector_str(measure.start_velocity, model.start_velocity, error.start_velocity,
+                                                 error.start_velocity_rel, error.start_velocity_value_rel)
+    s += f"END VELOCITY\n" + result_vector_str(measure.end_velocity, model.end_velocity, error.end_velocity,
+                                               error.end_velocity_rel, error.end_velocity_value_rel)
+    s += f"REACH\n" + result_vector_str(measure.reach, model.reach, error.reach, error.reach_rel, error.reach_value_rel)
+    return s
+
+
+def read_input(mass: float, scale: int) -> Input:
+    angle = float(input("Tilt of plane (rad) (0; pi/2) = "))
+    friction = float(input("Friction coefficient (Coulomb friction) = "))
+    velocity = float(input("Starting velocity (m/s) (parallel to slope) = "))
+    inp = Input(angle, mass, velocity, friction, scale)
+    print(inp.to_str_usr())
+    print(inp)
+    return inp
 
 
 def gen_ascii():
@@ -346,11 +438,10 @@ InclinedPlaneProject v{VERSION}
 
 def main():
     print(gen_ascii())
+
     settings = Settings(10, Vector(0, -9.81, UNIT_ACCELERATION), RESOLUTION, 40, 0.1, 50)
-    inp = Input(radians(80), 5, 20, 0.5, settings.scale)
-    print(inp.to_str_usr())
-    print(inp)
     print(settings)
+    inp = read_input(1, settings.scale)
 
     models = calculate_theoretical_model(inp, settings)
     is_full = models[0].is_full
@@ -361,22 +452,18 @@ def main():
 
     print(
         f"---RESULTS---\n"
-        f"Input data:\n"
-        f"Slope angle = {inp.tilt} rad (= {degrees(inp.tilt)} degrees)\n"
-        f"Start velocity vector (parallel to slope) = {inp.velocity_u} ({inp.velocity_u.str_value()})\n"
-        f"Mass of the block* = {inp.mass_u}{UNIT_MASS}\n"
-        f"Dynamic friction coefficient between block and slope (Coulomb friction model) = {inp.friction}\n"
-        f"Gravity vector = {settings.gravity}\n"
-        f"*Mass do not affect results."
+        f"{inp.pretty_str()}"
+        f"Gravity vector = {settings.gravity * (1 / settings.scale)}\n"
+        f"*Mass does not affect results.\n"
         f"Results:\n"
         f"CYCLE - One cycle is counted from block bouncing off the wall to block falling back on the wall.\n"
-        f"Cycles recorded = {len(results)}\n"
-        f"Full duration = {sim_duration}{UNIT_TIME}\n"
+        f"Each cycle result contains measured results compared to the theory model.\n"
+        f"Result pattern: 'measured' || 'model' error = 'error' ('rel. error')\n"
+        f"Cycles = {len(models)}\n"
+        f"Full duration = {time_str(sim_duration)}\n"
     )
-    if not is_full:
-        print("**Recorded cycle is not full. It means that the block has stopped in the middle of the plane.**")
-    for result in results:
-        print(result.pretty_str())
+    for i in range(0, len(models)):
+        print(result_str(results[i], models[i], Error(results[i], models[i])))
 
 
 main()
