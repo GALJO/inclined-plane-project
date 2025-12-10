@@ -1,7 +1,7 @@
 from math import sqrt
 
-from src.Scalar import Scalar
-from src.constants import RESOLUTION, MATH_PRECISION
+from application.math_objects.Scalar import Scalar
+from infrastructure.constants import RESOLUTION
 
 
 def translate_abs(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float, Scalar | float]:

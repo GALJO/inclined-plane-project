@@ -2,11 +2,11 @@ from math import sin, cos, pi
 
 from _pytest.raises import raises
 
-from src.Input import Input, MSG_OUT_OF_BOUNDS
-from src.Scalar import Scalar
-from src.Vector import Vector
-from src.constants import UNIT_TILT, UNIT_MASS, UNIT_VELOCITY, MATH_PRECISION
-from src.exceptions import InputParsingError
+from application.input.Input import Input, MSG_OUT_OF_BOUNDS
+from application.scalar.Scalar import Scalar
+from application.math_objects.Vector import Vector
+from infrastructure.constants import UNIT_TILT, UNIT_MASS, UNIT_VELOCITY, MATH_PRECISION
+from application.exceptions import InputParsingError
 
 
 def test_parsing_tilt():

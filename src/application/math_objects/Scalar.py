@@ -1,7 +1,7 @@
 import functools
-from math import nan, isnan
+from math import nan
 
-from src.constants import MATH_PRECISION
+from infrastructure.constants import MATH_PRECISION
 
 
 def is_number(o) -> bool:

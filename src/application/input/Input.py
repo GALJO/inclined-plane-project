@@ -1,9 +1,9 @@
 from math import cos, sin, pi
 
-from src.Scalar import Scalar
-from src.Vector import Vector
-from src.constants import SIM_SCALE, UNIT_VELOCITY, UNIT_MASS, UNIT_TILT
-from src.exceptions import InputParsingError
+from application.math_objects.Scalar import Scalar
+from application.math_objects.Vector import Vector
+from infrastructure.constants import SIM_SCALE, UNIT_VELOCITY, UNIT_MASS, UNIT_TILT
+from application.exceptions import InputParsingError
 
 MSG_OUT_OF_BOUNDS = "Input value out of bounds. Name={} Bounds={} Given={}"
 

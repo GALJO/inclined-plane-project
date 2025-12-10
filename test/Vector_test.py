@@ -1,7 +1,7 @@
 from math import sqrt
 
-from src.Scalar import Scalar
-from src.Vector import Vector
+from application.scalar.Scalar import Scalar
+from application.math_objects.Vector import Vector
 
 
 def test_init():

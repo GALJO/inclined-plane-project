@@ -1,6 +1,6 @@
-from src.Scalar import Scalar
-from src.Vector import translate, translate_abs
-from src.constants import RESOLUTION
+from application.scalar.Scalar import Scalar
+from application.math_objects.Vector import translate, translate_abs
+from infrastructure.constants import RESOLUTION
 
 
 def test_translation_scalar():

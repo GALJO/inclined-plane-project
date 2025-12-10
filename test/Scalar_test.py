@@ -1,7 +1,7 @@
 from math import isnan
 
-from src.Scalar import Scalar
-from src.constants import MATH_PRECISION
+from application.scalar.Scalar import Scalar
+from infrastructure.constants import MATH_PRECISION
 
 
 def test_inits():
