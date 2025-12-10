@@ -1,394 +1,27 @@
-import functools
 import logging
 import sys
-from math import sin, cos, tan, radians, sqrt
+from math import sin, cos, tan, radians
 from time import time
 
 import pygame
 import pymunk.pygame_util
 from pymunk import Arbiter, Space, Vec2d, Body
 
-VERSION = "1.0 BETA"
-RESOLUTION = (800, 800)
-
-D = 1e-10
-
-UNIT_VELOCITY = "m/s"
-UNIT_TILT = "rad"
-UNIT_ACCELERATION = "m/s^2"
-UNIT_MASS = "kg"
-UNIT_DISTANCE = "m"
-UNIT_TIME = "s"
-
-SIM_SCALE = 10
-SIM_GRAVITY = (0, 9.81 * SIM_SCALE)
-SIM_PRECISION = 0.1 * SIM_SCALE
-SIM_BLOCK_SIZE = 40
-SIM_FPS = 60
+from src.Input import Input
+from src.Scalar import Scalar
+from src.Vector import *
+from src.constants import *
 
 log = logging.getLogger(__name__)
 LOG_LEVEL = logging.DEBUG
-
-
-@functools.total_ordering
-class Scalar:
-    def __init__(self, _value: float, _unit: str):
-        self.value = _value if abs(_value) > D else 0
-        self.unit = _unit
-
-    @classmethod
-    def nan(cls):
-        return Scalar(float("nan"), "")
-
-    @staticmethod
-    def is_number(o) -> bool:
-        """
-        Checks if operand is a number.
-        :param o: Operand.
-        :return: True if o is number, False otherwise.
-        """
-        if type(o) == int or type(o) == float:
-            return True
-        return False
-
-    @staticmethod
-    def is_scalar(o):
-        """
-        Checks if operand is a Scalar.
-        :param o: Operand.
-        :return: True if o is Scalar, False otherwise.
-        """
-        if hasattr(o, "value") and hasattr(o, "unit"):
-            return True
-        return False
-
-    def __add__(self, other):
-        """
-        Defines addition.
-        :param other: Operand.
-        """
-        if self.is_number(other):
-            return Scalar(self.value + other, self.unit)
-        elif self.is_scalar(other):
-            return Scalar(self.value + other.value, self.unit)
-        else:
-            return NotImplemented
-
-    def __sub__(self, other):
-        """
-        Defines substraction.
-        :param other: Operand.
-        """
-        if self.is_number(other):
-            return Scalar(self.value - other, self.unit)
-        elif self.is_scalar(other):
-            return Scalar(self.value - other.value, self.unit)
-        else:
-            return NotImplemented
-
-    def __mul__(self, other):
-        """
-        Defines multiplication.
-        :param other: Operand.
-        """
-        if self.is_number(other):
-            return Scalar(self.value * other, self.unit)
-        elif self.is_scalar(other):
-            return Scalar(self.value * other.value, self.unit)
-        else:
-            return NotImplemented
-
-    def __abs__(self):
-        """
-        Defines absolute value.
-        """
-        return Scalar(abs(self.value), self.unit)
-
-    def __truediv__(self, other):
-        """
-        Defines division.
-        :param other: Operand.
-        """
-        if self.is_number(other):
-            return Scalar(self.value / other, self.unit)
-        elif self.is_scalar(other):
-            return Scalar(self.value / other.value, self.unit)
-        else:
-            return NotImplemented
-
-    def __eq__(self, other):
-        """
-        Defines equality.
-        :param other: Operand.
-        """
-        if self.is_number(other):
-            return self.value == other
-        elif self.is_scalar(other):
-            return self.value == other.value and self.unit == other.unit
-        else:
-            return NotImplemented
-
-    def __lt__(self, other):
-        """
-        Defines ordering.
-        :param other: Operand.
-        """
-        if self.is_number(other):
-            return self.value < other
-        elif self.is_scalar(other):
-            return self.value < other.value
-        else:
-            return NotImplemented
-
-
-    def __str__(self):
-        return f"{self.value}{self.unit}"
-
-
-def translate_abs(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float, Scalar | float]:
-    """
-    Translates point in coordinate system starting in bottom-left screen corner
-    to point in pygame coordinate system and vice versa. (x, y) vector changes sense, direction and value.
-    :param x: point x-coordinate
-    :param y: point y-coordinate
-    :return: (x, y) - translated coordinate
-    :rtype: tuple[float, float]
-    """
-    return x, - y + RESOLUTION[1]
-
-
-def translate(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float, Scalar | float]:
-    """
-    Translates point in coordinate system starting in bottom-left screen corner
-    to point in pygame coordinate system and vice versa. (x, y) vector changes only sense and direction.
-    :param x: vector x-coordinate
-    :param y: vector y-coordinate
-    :return: (x, y) - translated coordinate
-    :rtype: tuple[float, float]
-    """
-    return x, y * (-1)
-
-
-class Vector:
-    """
-    A class representing a vector.
-
-    Attributes
-    ----------
-    x : Scalar
-        vector x-coordinate
-    y : Scalar
-        vector y-coordinate
-    value : Scalar
-        vector value
-    """
-
-    def __init__(self, _x: Scalar, _y: Scalar):
-        val = sqrt(_x.value ** 2 + _y.value ** 2)
-        if val > D:
-            self.x = _x
-            self.y = _y
-            self.value = Scalar(val, _x.unit)
-        else:
-            self.x = Scalar(0, _x.unit)
-            self.y = Scalar(0, _x.unit)
-            self.value = Scalar(0, _x.unit)
-
-    @classmethod
-    def from_float(cls, _x: float, _y: float, _unit: str):
-        return cls(Scalar(_x, _unit), Scalar(_y, _unit))
-
-    def translated(self):
-        """
-        Translates vector in coordinate system starting in bottom-left screen corner
-        to point in pygame coordinate system and vice versa. Vector changes sense, direction and value.
-        :returns:Translated Vector.
-        """
-        x, y = translate(self.x, self.y)
-        return Vector(x, y)
-
-    def translated_abs(self):
-        """
-        Translates vector in coordinate system starting in bottom-left screen corner
-        to point in pygame coordinate system and vice versa. Vector changes only sense and direction.
-        :returns: Translated Vector.
-        """
-        x, y = translate_abs(self.x, self.y)
-        return Vector(x, y)
-
-    def __str__(self) -> str:
-        """
-        Converts to string.
-        """
-        return f"Vector({self.x}, {self.y} -> {self.value})"
-
-    def __mul__(self, other: int | float):
-        """
-        Defines multiplication of a vector.
-        :param other: Scalar multiplier.
-        """
-        return Vector(self.x * other, self.y * other)
-
-
-class Input:
-    """
-    A class storing not constant properties of simulation.
-    Attributes
-    ----------
-    tilt : float
-        Tilt of the plane (radians).
-    mass : float
-        Mass of the block.
-    velocity : Vector
-        Starting velocity of the block.
-    friction : float
-        Coulomb friction coefficient between block and plane.
-    """
-
-    @staticmethod
-    def parse_tilt(tilt: str) -> Scalar:
-        """
-        Parses tilt from user input.
-
-        Parameters
-        ----------
-        tilt: str
-            User's tilt input.
-
-        Returns
-        -------
-        tilt: Scalar
-            Parsed Scalar tilt.
-        """
-        return Scalar(float(tilt), UNIT_TILT)
-
-    @staticmethod
-    def parse_mass(mass: str) -> Scalar:
-        """
-        Parses mass from user input.
-        Parameters
-        ----------
-        mass: str
-            User's input.
-
-        Returns
-        -------
-        mass: Scalar
-            Parsed Scalar mass.
-        """
-        return Scalar(float(mass), UNIT_MASS)
-
-    @staticmethod
-    def parse_velocity(velocity: str, tilt: Scalar) -> Vector:
-        """
-        Parses velocity from user input.
-        Parameters
-        ----------
-        velocity: str
-            User's input (velocity parallel to plane).
-        tilt: Scalar
-            Tilt of plane (radians).
-
-                Returns
-        -------
-        velocity: Vector
-            Parsed Vector velocity.
-        """
-        v = float(velocity)
-        return Vector.from_float(cos(tilt.value) * v, sin(tilt.value) * v, UNIT_VELOCITY)
-
-    @staticmethod
-    def parse_friction(friction: str) -> Scalar:
-        """
-        Parses friction from user input.
-        Parameters
-        ----------
-        friction: str
-            User's input.
-
-                Returns
-        -------
-        friction: Scalar
-            Parsed Scalar friction.
-        """
-        return Scalar(float(friction), "")
-
-    def __init__(self, _tilt: Scalar, _mass: Scalar, _velocity: Vector, _friction: Scalar):
-        """
-        Class constructor.
-        Parameters
-        ----------
-        _tilt: Scalar
-        _mass: Scalar
-        _velocity: Vector
-        _friction: Scalar
-        """
-        self.tilt = _tilt
-        self.mass = _mass
-        self.velocity = _velocity
-        self.friction = _friction
-
-    @classmethod
-    def user(cls, _tilt: str, _mass: str, _velocity: str, _friction: str):
-        """
-        Creates Input instance from user input.
-        Parameters
-        ----------
-        _tilt: str
-            Tilt from user's input.
-        _mass: str
-            Mass from user's input.
-        _velocity: str
-            Velocity from user's input.
-        _friction: str
-            Friction from user's input.
-
-        Returns
-        -------
-        input: Input
-            Parsed Input instance.
-        """
-        tilt = cls.parse_tilt(_tilt)
-        return cls(tilt, cls.parse_mass(_mass), cls.parse_velocity(_velocity, tilt),
-                   cls.parse_friction(_friction))
-
-    @classmethod
-    def simulation(cls, _user_input):
-        """
-        Converts Input object so it is ready for simulation.
-        Parameters
-        ----------
-        _user_input: Input
-            User's Input.
-
-        Returns
-        -------
-        input: Input
-            Parsed Input instance.
-        """
-        return cls(
-            _user_input.tilt,
-            _user_input.mass * SIM_SCALE,
-            _user_input.velocity * SIM_SCALE,
-            _user_input.friction
-        )
-
-    def __str__(self):
-        """
-        Converts to string.
-        """
-        return (f"Input(tilt={self.tilt}, "
-                f"mass={self.mass}, "
-                f"velocity={self.velocity}, "
-                f"friction={self.friction})")
 
 
 class Measurement:
     """
     A class representing a measurement in simulation.
     It stores data about time of measurement and block parameters.
-    It can be one of two simulation events:
-    - Complete stop of the block,
+    It can be one of two simulation events:\n
+    - Complete stop of the block,\n
     - Collision between the wall and the block.
 
     Attributes
@@ -403,6 +36,7 @@ class Measurement:
 
     def __init__(self, _time: float, _position: Vec2d, _velocity: Vec2d):
         """
+        Class constructor.
         Parameters
         ----------
         _time: float
@@ -428,9 +62,9 @@ class Measurement:
 class Cycle:
     """
     A class representing a cycle of the simulation.
-    One cycle is defined as three Measurements:
-    1. Block collides with the wall (then bounces off the wall and starts sliding up the plane).
-    2. Block stops in one point of the plane (then starts sliding down).
+    One cycle is defined as three Measurements:\n
+    1. Block collides with the wall (then bounces off the wall and starts sliding up the plane).\n
+    2. Block stops in one point of the plane (then starts sliding down).\n
     3. Block collides with the wall (also beginning of a new cycle).
     Attributes
     ----------
@@ -479,7 +113,7 @@ class Result:
     duration: Scalar
         Time of full cycle. If cycle isn't full is duration1.
     start_velocity: Vector
-        Velocity at the 1st point of cycle (always directed up the slope).
+        Velocity at the 1st point of cycle (always positive coordinates).
     end_velocity: Vector
         Velocity at the 3rd point of cycle.
     reach: Vector
@@ -488,12 +122,24 @@ class Result:
 
     def __init__(self, number: int, is_full: bool, duration1: Scalar, duration2: Scalar, start_velocity: Vector,
                  end_velocity: Vector, reach: Vector):
+        """
+        Class constructor
+        Parameters
+        ----------
+        number: int
+        is_full: bool
+        duration1: Scalar
+        duration2: Scalar
+        start_velocity: Vector
+        end_velocity: Vector
+        reach
+        """
         self.number = number
         self.is_full = is_full
         self.duration1 = duration1
         self.duration2 = duration2
         self.duration = duration1 + duration2 if is_full else duration1
-        self.start_velocity = start_velocity
+        self.start_velocity = abs(start_velocity)
         self.end_velocity = end_velocity
         self.reach = reach
 
@@ -501,17 +147,10 @@ class Result:
     def measured(cls, cycle: Cycle, is_full: bool):
         """
         Parses measured Cycle object to create result.
-        Parameters
-        ----------
-        cycle: Cycle
-            Cycle object.
-        is_full: bool
-            True if the cycle is full.
-            Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
-
-        Returns
-        -------
-        Result object
+        :param cycle: Cycle object.
+        :param is_full: True if the cycle is full.
+        Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
+        :returns: Result object
         """
         return cls(cycle.number,
                    is_full,
@@ -543,7 +182,8 @@ class Result:
             Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
         Returns
         -------
-        Result object
+        result: Result
+            Result object
         """
         v1 = start_velocity.value.value
         reach_value = (v1 * v1) / (2 * g * (f * cos(tilt) + sin(tilt)))
@@ -563,6 +203,9 @@ class Result:
         return cls(number, is_full, d1, d2 if is_full else Scalar.nan(), start_velocity, end_velocity, reach)
 
     def __str__(self):
+        """
+        Converts to string.
+        """
         return (f"Result(number={self.number}, "
                 f"is_full={self.is_full}, "
                 f"duration1={self.duration1}, "
@@ -650,6 +293,15 @@ class Error:
     """
 
     def __init__(self, measure: Result, model: Result):
+        """
+        Class constructor.
+        Parameters
+        ----------
+        measure: Result
+            Measured Result.
+        model: Result
+            Model Result.
+        """
         self.duration = ScalarError(measure.duration, model.duration)
         self.duration1 = ScalarError(measure.duration1, model.duration1)
         self.duration2 = ScalarError(measure.duration2, model.duration2)
@@ -657,6 +309,9 @@ class Error:
         self.end_velocity = VectorError(measure.end_velocity, model.end_velocity)
 
     def __str__(self):
+        """
+        Converts to string.
+        """
         return (f"Error(duration={self.duration}, "
                 f"duration1={self.duration1}, "
                 f"duration2={self.duration2}, "
@@ -668,7 +323,7 @@ def init_space(inp: Input) -> tuple[Space, Body]:
     """
     Function initializes Pymunk Space object for simulation.
     :param inp: Input data.
-    :return: Set up Space object and Body object of block.
+    :returns: Set up Space object and Body object of block.
     :rtype: tuple[Space, Body]
     """
     space = pymunk.Space()
@@ -687,7 +342,8 @@ def init_space(inp: Input) -> tuple[Space, Body]:
                              moment=pymunk.moment_for_box(sys.float_info.max,
                                                           (SIM_BLOCK_SIZE, SIM_BLOCK_SIZE)))
     block_body.angle = radians(270) - inp.tilt.value
-    block_body.position = translate_abs(100 - 50 * sin(inp.tilt.value) ** 2, 50 * sin(inp.tilt.value) * cos(inp.tilt.value))
+    block_body.position = translate_abs(100 - 50 * sin(inp.tilt.value) ** 2,
+                                        50 * sin(inp.tilt.value) * cos(inp.tilt.value))
 
     block = pymunk.Poly(block_body, [(0, 0), (0, SIM_BLOCK_SIZE),
                                      (SIM_BLOCK_SIZE, 0), (SIM_BLOCK_SIZE, SIM_BLOCK_SIZE)])
@@ -730,7 +386,8 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
     log.debug(f"Set up pygame display. resolution={RESOLUTION} fps={SIM_FPS}")
 
     vel = inp.velocity.translated()
-    block.apply_impulse_at_world_point((vel.x.value * inp.mass.value, vel.y.value * inp.mass.value), translate_abs(0, 0))
+    block.apply_impulse_at_world_point((vel.x.value * inp.mass.value, vel.y.value * inp.mass.value),
+                                       translate_abs(0, 0))
 
     collision_events: list[Measurement] = []
     stop_events: list[Measurement] = []
@@ -878,6 +535,10 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
 
 
 def read_console() -> Input:
+    """
+    Reads user's input from console.
+    :returns: User Input.
+    """
     angle = input("Tilt of plane (rad) (0; pi/2) = ")
     friction = input("Friction coefficient (Coulomb friction) (0;inf) = ")
     mass = input("Block's mass (kg) (0;inf) = ")
@@ -887,7 +548,11 @@ def read_console() -> Input:
     return inp
 
 
-def gen_ascii():
+def banner():
+    """
+    Generates welcome banner with version.
+    :returns: String.
+    """
     return fr"""
  _____           _ _                _  ______ _                   ______          _           _   
 |_   _|         | (_)              | | | ___ \ |                  | ___ \        (_)         | |  
@@ -902,7 +567,7 @@ InclinedPlaneProject v{VERSION}
 
 
 def main():
-    print(gen_ascii())
+    print(banner())
 
     log.setLevel(LOG_LEVEL)
     handler = logging.StreamHandler(sys.stdout)
@@ -912,8 +577,8 @@ def main():
 
     log.info(f"Logger start. level={LOG_LEVEL}")
 
-    user_input = read_console()
-    # user_input = Input.user("0.7854", "1", "20", "0.5")
+    # user_input = read_console()
+    user_input = Input.user("0.7854", "1", "20", "0.5")
     simulation_input = Input.simulation(user_input)
 
     models = calculate_theoretical_model(user_input)
