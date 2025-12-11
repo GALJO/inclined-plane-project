@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="18b56afb-5ef7-4867-b548-addf6227b8e8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/InclinedPlaneProject.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/readme.md" beforeDir="false" afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -67,11 +66,11 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/doc" />
       <recent name="$PROJECT_DIR$/src/infrastructure" />
       <recent name="$PROJECT_DIR$/src" />
       <recent name="$PROJECT_DIR$/src/application/input" />
       <recent name="$PROJECT_DIR$/src/application/result" />
-      <recent name="$PROJECT_DIR$/src/application/math_objects" />
     </key>
   </component>
   <component name="RunManager" selected="Python.main">
@@ -171,7 +170,7 @@
       <workItem from="1765384121330" duration="13747000" />
       <workItem from="1765445140869" duration="7765000" />
       <workItem from="1765479867646" duration="8821000" />
-      <workItem from="1765488728333" duration="577000" />
+      <workItem from="1765488728333" duration="4420000" />
     </task>
     <servers />
   </component>

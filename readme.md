@@ -2,7 +2,7 @@
 
 ### 0. Introduction
 
-InclinedPlaneProject is program that simulates physics scenario of mass point moving on inclined plane.
+InclinedPlaneProject is a program that simulates physics scenario of mass point moving on inclined plane.
 You can provide plane tilt, point mass, point start velocity and friction coefficient.
 It runs simulation based on *Pymunk* physics engine,
 calculates model based on basic Newton's dynamics and returns results from physics engine,
@@ -11,30 +11,37 @@ model results and measurement errors.
 ### 1. Scenario
 
 <hr/>
-In this section, you can learn about scenario simulated in program. 
+In this section, you can learn about scenario of the program. 
 It does not contain detailed physics description and scaaarrry formulas :), only necessary descriptions and schemas.
 <hr/>
 
-(scheme 1.)
+Scenario is defined as set of the *Cycles* - repeating set of events in scenario. 
+One *Cycle* contains 3 stages:
 
-On scheme 1. you can see start snapshot of scenario. Block (representing point mass) starts in
-wall-plane corner with velocity given by user.
+![scheme 1.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme1.jpg)
+(scheme 1. - start of the cycle)
 
-(scheme 2.)
+- 1-st stage - Block (representing point mass) starts in
+the corner with velocity opposite to the last cycle end velocity (if it is first cycle it is user start velocity).
 
-On schema 2., you can see snapshot of scenario taken some time after start. Due to friction
-block stopped in some point on the plane. Now, the scenario can go two ways. Normally, it will proceed
-to 3a. However, for some input data, it proceeds to 3b.
+![scheme 2.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme2.jpg)
+(scheme 2. - middle of the cycle)
 
-On schema 3a., you can see snapshot of scenario taken when block is back by the wall.
-Block is about to collide (perfectly elastic collision) with the wall.
-After collision, scenario is back in 1. point, but with smaller velocity due to friction.
-Process from 1. to 3b. point is called *Full Cycle*, and it repeats until block (almost) stops.
+- 2-nd stage - Due to friction block has stopped. Now, the cycle can go two ways. 
+In most cases, block slides back and proceeds to 3-rd stage. 
+However, for some input data, it proceeds to 2-nd stage termination.
 
-(schema 3b.)
+![scheme 3.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme3.jpg)
+(scheme 3. - type A end of the cycle)
 
-On scheme 3b. you can see snapshot of scenario after point 2. Friction is too big to block to
-slide down the plane. It stops in the 2. point, creating so called *Not Full Cycle*. Scenario/simulation ends here.
+- 3-rd stage type A - Block is about to collide with the wall.
+After collision, scenario is back in 1-st stage of the next cycle.
+Process from 1-st to 3-rd type A stage is called *Full Cycle*, and it repeats until block (almost) stops.
+Scenario is defined as set of *Full Cycles*.
+
+- 2-nd stage termination - Friction is too big to block to slide down the plane. 
+It stops in the 2-nd stage, creating so called *Not Full Cycle*. Scenario ends here - it is defined
+as one *Not Full Cycle*.
 
 ### 2a. Input
 
@@ -69,7 +76,6 @@ One row contains ~~too much~~ just enough data about simulation outcome.
 
 Fair warning, this section is intended for ~~physics geeks~~ anyone, who wants to know more about
 physics model of scenario. I recommend to start with reading other sections.
-
 <hr>
 
 Let us introduce notation for further use of variables and constants.
@@ -99,7 +105,8 @@ $\vec{k} = [k_x, k_y]$
 </div>
 <hr>
 
-(scheme 4.)
+![scheme 4.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme1.jpg)
+(scheme 4. - beginning of the cycle)
 
 Static, tilted surface is hereinafter referred to as *the plane*
 
@@ -132,12 +139,12 @@ conservation of energy formula and performing basic algebra and trygonometry, we
 $v_{(k+1)1} = v_{(k+1)0}\sqrt{\frac{2\tan{\theta}-\mu}{2(\mu+\tan{\theta})}}$ &ensp;&ensp; $(2)$
 </div>
 
-Basic transformations of $(2)$ using *Newton's Second Law of Motion*<sup>6</sup> and trigonometry
+Basic transformations of $(2)$ using *Newton's Second Law of Motion*[^6] and trigonometry
 results in the following formulas:
 
 <div style="text-align: center;">
 
- $x_{(k+1)} = \frac{v_{(k+1)0}^2}{2{g}(\sin{\theta}+\mu\cos{\theta})}$ &ensp;&ensp; $(3)$
+$x_{(k+1)} = \frac{v_{(k+1)0}^2}{2{g}(\sin{\theta}+\mu\cos{\theta})}$ &ensp;&ensp; $(3)$
 
 $t_{(k+1)1} = \frac{v_{(k+1)0}}{g(\sin{\theta}+\mu\cos{\theta})}$ &ensp;&ensp; $(4)$
 
@@ -147,15 +154,28 @@ $t_{k+1} = t_{(k+1)1} + t_{(k+1)2}$ &ensp;&ensp; $(6)$
 </div>
 
 With use of derived formulas $(1)$ - $(6)$ we can obtain full model data for $(k+1)$-th cycle
-knowing only constants and $(k)$-th end velocity.
+knowing only constants and $k$-th end velocity.
+
+There is a corner case when kinetic friction force is
+bigger than projection of the gravitation vector onto the horizont. 
+In 2-nd cycle stage kinetic friction changes to static friction and the point stops moving.
+This corner case happens if and only if the following formula is true:
+<div style="text-align: center;">
+
+$\frac{\mu\cos{\theta}}{sin{\theta}} \geq 1$ &ensp;&ensp; (7)
+</div>
 <hr>
 
-TO POWINNO IŚĆ DO KOLEJNEJ SEKCJI
-- Program uses presented above recurrence formulas to prepare theoretical model.
-The program treats start velocity given by user as fictional (-1)-th cycle end velocity.
-Program stops counting cycles when end velocity is very small, but not equal to zero, so
-it is not completely accurate.
-- Program predicts simulation behavior on theoretical model. If theoretical model had n-
+#### Theoretical model in practice
+- Program uses $(1)$-$(6)$ recurrence formulas to prepare theoretical model.
+The program treats start velocity given by user as fictional $0$-th end velocity.
+Program stops counting cycles when $n$-th end velocity is close to zero.
+- Program checks *Not Full Cycle* occurrence based on (7) formula.
+- Program predicts simulation behavior based on theoretical model. 
+If theoretical model had ${n}$ cycles then simulation also waits for ${n}$ cycles before end.
+If theoretical model had *Not Full Cycle* then simulation is also prepared for this case.
+- Simulation errors are prepared based on theoretical model and using basic error formulas.
+<hr>
 
 #### Footnotes
 
@@ -163,4 +183,5 @@ it is not completely accurate.
 [^2]:[Kinetic Energy](http://hyperphysics.phy-astr.gsu.edu/hbase/ke.html) (Access: 11.12.2025)\
 [^3]:[Conservation Laws](http://hyperphysics.phy-astr.gsu.edu/hbase/conser.html) (Access: 11.12.2025)\
 [^4]:[Work Done by a Force](https://www.monash.edu/student-academic-success/physics/relationships-between-force,-energy-and-mass/work-done-by-a-force) (Access: 11.12.2025)\
-[^5]:[Newton’s Laws of Motion](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/#newtons-first-law-inertia) (Access: 11.12.2025)
+[^5]:[Coulomb Friction](https://www.sciencedirect.com/topics/engineering/coulomb-friction) (Access: 11.12.2025)\
+[^6]:[Newton’s Laws of Motion](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/#newtons-first-law-inertia) (Access: 11.12.2025)
