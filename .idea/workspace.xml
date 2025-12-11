@@ -5,26 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="18b56afb-5ef7-4867-b548-addf6227b8e8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/application/output/OutputPort.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/application/output/adapter/csv/CsvOutputAdapter.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/application/result/Error.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/application/result/Result.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/infrastructure/logging_init.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/infrastructure/ports_setup.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/infrastructure/print_banner.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/InclinedPlaneProject.iml" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/InclinedPlaneProject.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/readme.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Input.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/application/input/Input.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Scalar.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/application/math_objects/Scalar.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/Vector.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/application/math_objects/Vector.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/infrastructure/constants.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/exceptions.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/application/exceptions.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/src/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/Input_parsing_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/Input_parsing_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/Scalar_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/Scalar_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/Vector_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/Vector_test.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/translation_test.py" beforeDir="false" afterPath="$PROJECT_DIR$/test/translation_test.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,36 +35,36 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;Python tests.Pytest.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for test.Input_parsing_test.test_parsing_tilt.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for test.Scalar_test.test_nan.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for test.test_.test_inits.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests for test.test_.test_ordering_number.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in Input_parsing_test.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python tests.Python tests in Scalar_test.py.executor&quot;: &quot;Run&quot;,
-    &quot;Python.exception.executor&quot;: &quot;Run&quot;,
-    &quot;Python.main.executor&quot;: &quot;Run&quot;,
-    &quot;Python.master.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/janek/PycharmProjects/InclinedPlaneProject/test&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.keymap&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "Python tests.Pytest.executor": "Run",
+    "Python tests.Python tests for test.Input_parsing_test.test_parsing_tilt.executor": "Run",
+    "Python tests.Python tests for test.Scalar_test.test_nan.executor": "Run",
+    "Python tests.Python tests for test.test_.test_inits.executor": "Run",
+    "Python tests.Python tests for test.test_.test_ordering_number.executor": "Run",
+    "Python tests.Python tests in Input_parsing_test.py.executor": "Run",
+    "Python tests.Python tests in Scalar_test.py.executor": "Run",
+    "Python.exception.executor": "Run",
+    "Python.main.executor": "Run",
+    "Python.master.executor": "Run",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "master",
+    "last_opened_file_path": "/home/janek/PycharmProjects/InclinedPlaneProject/test",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "editor.preferences.tabs",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/src/infrastructure" />
@@ -185,7 +168,10 @@
       <workItem from="1765198850511" duration="10261000" />
       <workItem from="1765356013511" duration="35000" />
       <workItem from="1765356054280" duration="2776000" />
-      <workItem from="1765384121330" duration="13551000" />
+      <workItem from="1765384121330" duration="13747000" />
+      <workItem from="1765445140869" duration="7765000" />
+      <workItem from="1765479867646" duration="8821000" />
+      <workItem from="1765488728333" duration="577000" />
     </task>
     <servers />
   </component>
