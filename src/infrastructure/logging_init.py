@@ -14,6 +14,7 @@ or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
 import logging
+from time import sleep
 
 from infrastructure.constants import LOG_LEVEL
 
@@ -30,6 +31,7 @@ def logging_init():
     logger.handlers.clear()
     logger.setLevel(_loglevel)
     logger.addHandler(ch)
+    sleep(0.1)
     logging.info("Logging activated")
 
 

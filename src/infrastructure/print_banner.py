@@ -13,21 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-from infrastructure.constants import VERSION
+from pathlib import Path
 
 
-def print_banner():
-    print(
-        fr"""
- _____           _ _                _  ______ _                   ______          _           _   
-|_   _|         | (_)              | | | ___ \ |                  | ___ \        (_)         | |  
-  | | _ __   ___| |_ _ __   ___  __| | | |_/ / | __ _ _ __   ___  | |_/ / __ ___  _  ___  ___| |_ 
-  | || '_ \ / __| | | '_ \ / _ \/ _` | |  __/| |/ _` | '_ \ / _ \ |  __/ '__/ _ \| |/ _ \/ __| __|
- _| || | | | (__| | | | | |  __/ (_| | | |   | | (_| | | | |  __/ | |  | | | (_) | |  __/ (__| |_ 
- \___/_| |_|\___|_|_|_| |_|\___|\__,_| \_|   |_|\__,_|_| |_|\___| \_|  |_|  \___/| |\___|\___|\__|
-                                                                                _/ |              
-                                                                               |__/                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 
-InclinedPlaneProject v{VERSION}
-All rights reserved 2025.
-        """
-    )
+def print_banner(version: str):
+    banner = open(Path(__file__).parent.parent.parent.joinpath("BANNER"), "r")
+    notice = open(Path(__file__).parent.parent.parent.joinpath("NOTICE"), "r")
+
+    print(notice.read())
+    print(banner.read(), version)

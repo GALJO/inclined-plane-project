@@ -31,6 +31,7 @@ from infrastructure.logging_init import logging_init
 from infrastructure.ports_setup import AppPorts
 from infrastructure.print_banner import print_banner
 
+VERSION = "1.0 BETA"
 
 def init_space(inp: Input) -> tuple[Space, Body]:
     """
@@ -269,7 +270,7 @@ def read_console() -> Input:
 
 
 def main():
-    print_banner()
+    print_banner(VERSION)
     logging_init()
 
     ports = AppPorts()

@@ -2,59 +2,61 @@
 
 ### 0. Introduction
 
-InclinedPlaneProject is a program that simulates physics scenario of mass point moving on inclined plane.
-You can provide plane tilt, point mass, point start velocity and friction coefficient.
-It runs simulation based on *Pymunk* physics engine,
-calculates model based on basic kinematics and dynamics and returns results from physics engine,
+InclinedPlaneProject is a program that simulates the physics scenario of a mass point moving on an inclined plane.
+You can provide a plane tilt, a point's mass, a point start velocity and a friction coefficient.
+It runs simulation based on the *Pymunk* physics engine,
+calculates the model based on basic kinematics and dynamics and returns results from the physics engine,
 model results and measurement errors.
+
+#### Contents
+1. [Scenario](#1-scenario)
+2. a. [Input](#2a-input)\
+   b. [Output](#2b-output)
+3. [Physics theoretical model](#3-physics-theoretical-model)
+4. [Simulation details](#4-simulation-details)
+5. [Setup development environment](#5-setup-development-environment)
+6. [License](#6-license)
 
 ### 1. Scenario
 <hr>
-In this section, you can learn about scenario of the program. 
-It does not contain detailed physics description and scaaarrry formulas :), only necessary descriptions and schemas.
+In this section, you can learn about the scenario of the program. 
+It does not contain a detailed physics description and scaaarrry formulas :), only necessary descriptions and schemas.
 <hr>
 
-Scenario is defined as set of the *cycles*: _Cycle_ is repeating set of events in scenario. 
+The scenario is defined as a set of *cycles*: A **cycle** is a repeating set of events in the scenario. 
 One *cycle* is 3 stages:
 
 ![scheme 1.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme1.jpg)
-(scheme 1. - start of the cycle)
+(scheme 1. - start of a cycle)
 
-- 1-st stage - Block (representing point mass) starts in
-the corner with velocity opposite to the last cycle end velocity (if it is first cycle it is user start velocity).
+- 1st stage - The block (representing the mass point) starts in
+the corner with the velocity opposite to the last cycle's end velocity.
 
 ![scheme 2.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme2.jpg)
-(scheme 2. - middle of the cycle)
+(scheme 2. - middle of a cycle)
 
-- 2-nd stage - Due to friction block has stopped. Now, the cycle can go two ways. 
-In most cases, block slides back and proceeds to 3-rd stage. 
-However, for some input data, it proceeds to 2-nd stage termination.
+- 2nd stage - Due to the friction the block has stopped. Now, a cycle can go two ways. 
+In most cases, the block slides back and proceeds to the 3rd stage. 
+However, for some input data, it proceeds to the 2nd stage termination.
 
 ![scheme 3.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme3.jpg)
-(scheme 3. - type A end of the cycle)
+(scheme 3. - end of a cycle)
 
-- 3-rd stage type A - Block is about to collide with the wall.
-After collision, scenario is back in 1-st stage of the next cycle.
-Process from 1-st to 3-rd type A stage is called *Full Cycle*, and it repeats until block (almost) stops.
-Scenario is defined as set of *Full Cycles*.
+- 3rd stage - The block is about to collide with the wall.
+After the collision, the scenario is back in the 1st stage of the next cycle.
+A process from the 1st to the 3rd stage is called a **full cycle**, and it repeats until the block (almost) stops.
+The scenario is defined as a set of full cycles.
 
-- 2-nd stage termination - Friction is too big to block to slide down the plane. 
-It stops in the 2-nd stage, creating so called *Not Full Cycle*. Scenario ends here - it is defined
-as one *Not Full Cycle*.
+- 2nd stage termination - The friction is too big to the block to slide down the plane. 
+The block stops in the 2nd stage, creating so called a **not full cycle**. The scenario ends here - it is defined
+as a one element set of *not full cycles*.
 
 ### 2a. Input
-
 <hr/>
 In this section you will learn what data program reads from you (constants of simulation):
 <hr/>
 
-- Plane tilt (radians) - Angle between horizon and plane.
-  Program accepts values between $0$ and $\frac{\pi}{2}$ radians (0 to 90 degrees). It does not accept
-  values (almost) equal $0$ and $\frac{\pi}{2}$ radians.
-
-- Point mass (kilograms) - Mass of the point mass. It must be bigger than $0$.
-
--
+- **Lorem**
 
 ### 2b. Output
 
@@ -62,8 +64,8 @@ In this section you will learn what data program reads from you (constants of si
 In this section you will learn what data program returns to you and in what form.
 <hr/>
 
-~~For now~~ There is only one output form - .csv file with table. Each **row** contains data for one scenario cycle.
-One row contains ~~too much~~ just enough data about simulation outcome.
+~~For now~~ There is only one output form - the .csv file with table. Each **row** contains data for the one cycle.
+One row contains ~~too much~~ just enough data about the simulation outcome.
 
 #### Columns
 
@@ -74,25 +76,25 @@ One row contains ~~too much~~ just enough data about simulation outcome.
 <hr>
 
 Fair warning, this section is intended for ~~physics geeks~~ anyone, who wants to know more about
-physics model of the scenario. I recommend to start with reading other sections.
+the physics model of the scenario. I recommend to start with reading other sections.
 <hr>
 
-Let us introduce notation for further use of variables and constants.
+Let us introduce the notation for further use of the variables and the constants.
 
-*Cycle* is defined in **Scenario** section.
+A **cycle** is defined in **Scenario** section.
 
 #### Variables
 
-- $\vec{v_{k0}}$ - Start velocity of $k$-th *cycle*.
-- $\vec{v_{k1}}$ - End velocity of $k$-th *cycle* (hereinafter referred to as *$k$-th end velocity*).
-- $\vec{x_{k}}$ - Vector between 1-st and 2-nd step of $k$-th *cycle* point positions (range).
-- $t_{k1}$ - Time elapsed between 1-st and 2-nd step of $k$-th *cycle*.
-- $t_{k2}$  - Time elapsed between 2-nd and 3-rd step of $k$-th *cycle*.
-- $t_{k}$ - Full duration of $k$-th *cycle*.
+- $\vec{v_{k0}}$ - Start velocity of the $k$-th cycle.
+- $\vec{v_{k1}}$ - End velocity of the $k$-th cycle (hereinafter referred to as the *$k$-th end velocity*).
+- $\vec{x_{k}}$ - Vector between the 1st and the 2nd step of the $k$-th cycle point positions (range).
+- $t_{k1}$ - Time elapsed between the 1st and the 2nd step of the $k$-th cycle.
+- $t_{k2}$  - Time elapsed between the 2nd and the 3rd step of $k$-th cycle.
+- $t_{k}$ - Full duration of the $k$-th cycle.
 
 #### Constants
 
-- $\theta$ - Angle between horizontal and the tilted surface.
+- $\theta$ - The angle between horizontal and the tilted surface.
 - $\vec{v_{01}}$ - Scenario's start velocity.
 - $\vec{g} = [0, -9.81] \frac{m}{s^2}$ - Gravitational acceleration.
 - $\mu$ - Friction coefficient between the mass point and the surface.
@@ -179,7 +181,6 @@ Program stops counting cycles when $n$-th end velocity is close to zero.
 If theoretical model has ${n}$ *cycles* then simulation waits for ${n}$ *cycles* before ending.
 If theoretical model had *Not Full Cycle* then simulation is also prepared for this case.
 - Simulation errors are prepared with data from theoretical model as a true values using basic error formulas.
-<hr>
 
 ### 4. Simulation details
 <hr>
@@ -199,9 +200,61 @@ of space.
 
 You can observe, that with every simulation cycle, results gets less precise.
 
+### 5. Setup development environment
+<hr>
+This section is for developers, who want to work on that project, make some experiments or own modifications.   
 <hr>
 
-#### Footnotes
+#### Prerequisites
+- Python 3.12 with pip,
+- Cloned repository of InclinedPlaneProject.
+
+#### First setup
+Project is using [Pipenv](https://pipenv.pypa.io/en/latest/) python module as package manager, 
+so environment setup is nice and easy. Just follow these steps:
+1. Install pipenv with python pip module.
+```
+pip install pipenv=2026.0.2
+```
+2. Setup pipenv shell in repo folder.
+```
+cd [path to repo]
+pipenv shell --python 3.12
+```
+3. While in pipenv shell install all packages.
+```
+pipenv install
+```
+4. Run `main.py`.
+```
+python3 src/main.py
+```
+Happy coding!
+
+#### Back again
+Let's say you completed your first setup, turned off computer and went for some **power nap**.
+How to get back to the environment? It's easy:
+```
+cd [path to repo]
+pipenv shell
+python3 src/main.py
+```
+and Voilà!
+
+#### Important notice
+You did something cool with my project and want to share it? 
+Remember to follow Terms and Conditions in LICENSE file.
+
+### 6. License
+<hr>
+This section describes licensing of the software.
+<hr>
+This software is licensed under [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0) license.
+The license is open-source with certain distribution rules. 
+For easy explain what you can/cannot/must do 
+look up [there](https://www.tldrlegal.com/license/apache-license-2-0-apache-2-0).
+You can find full license text in LICENSE file alongside with the notice in NOTICE file.
+
 
 [^1]:[Elastic and Inelastic Collisions](http://hyperphysics.phy-astr.gsu.edu/hbase/elacol.html) (Access: 11.12.2025)
 [^2]:[Kinetic Energy](http://hyperphysics.phy-astr.gsu.edu/hbase/ke.html) (Access: 11.12.2025)
@@ -209,5 +262,3 @@ You can observe, that with every simulation cycle, results gets less precise.
 [^4]:[Coulomb Friction](https://www.sciencedirect.com/topics/engineering/coulomb-friction) (Access: 11.12.2025)
 [^5]:[Work Done by a Force](https://www.monash.edu/student-academic-success/physics/relationships-between-force,-energy-and-mass/work-done-by-a-force) (Access: 11.12.2025)
 [^6]:[Newton’s Laws of Motion](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/#newtons-first-law-inertia) (Access: 11.12.2025)
-
-<hr>
