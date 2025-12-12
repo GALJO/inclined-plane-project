@@ -167,7 +167,7 @@ $\frac{\mu\cos{\theta}}{sin{\theta}} \geq 1$ &ensp;&ensp; (7)
 <hr>
 
 #### Theoretical model in practice
-- Program uses $(1)$-$(6)$ recurrence formulas to prepare theoretical model.
+- Program uses $(1)$ - $(6)$ recurrence formulas to prepare theoretical model.
 The program treats start velocity given by user as fictional $0$-th end velocity.
 Program stops counting cycles when $n$-th end velocity is close to zero.
 - Program checks *Not Full Cycle* occurrence based on (7) formula.
@@ -177,7 +177,25 @@ If theoretical model had *Not Full Cycle* then simulation is also prepared for t
 - Simulation errors are prepared based on theoretical model and using basic error formulas.
 <hr>
 
-#### Footnotes
+### 4. Simulation details
+
+To simulate scenario program uses *[Pymunk](https://www.pymunk.org)* 
+physics engine and *[Pygame](https://www.pygame.org)* graphical interface.
+In simulation mass point is replaced with homogeneous block with infinite inertia, which
+is good approximation to the mass point in physics.
+
+Main objective of the simulation is to visualize the scenario for user. Therefore, simulation
+is scaled up, because it does not look good with real numbers. However, proportions are kept and  
+program "unscales" simulation measurements and final results are in 1:1 scale.
+
+If user uses too big starting velocity, block may fall out of the simulation due to limitations
+of space.
+
+You can observe that with every simulation cycle, it gets less precise.
+
+<hr>
+
+#### 5. Footnotes
 
 [^1]:[Elastic and Inelastic Collisions](http://hyperphysics.phy-astr.gsu.edu/hbase/elacol.html) (Access: 11.12.2025)\
 [^2]:[Kinetic Energy](http://hyperphysics.phy-astr.gsu.edu/hbase/ke.html) (Access: 11.12.2025)\
