@@ -20,7 +20,7 @@ from pytest.raises import raises
 from application.input.Input import Input, MSG_OUT_OF_BOUNDS
 from application.scalar.Scalar import Scalar
 from application.math_objects.Vector import Vector
-from infrastructure.constants import UNIT_TILT, UNIT_MASS, UNIT_VELOCITY, MATH_PRECISION
+from infrastructure.Config import UNIT_TILT, UNIT_MASS, UNIT_VELOCITY, MATH_PRECISION
 
 
 from application.exceptions import InputParsingError
@@ -33,9 +33,9 @@ def test_parsing_tilt():
     model_comma = Scalar(0.79, UNIT_TILT)
 
     # when
-    tilt = Input.parse_tilt("0.79")
-    tilt_pi = Input.parse_tilt("0.25p")
-    tilt_comma = Input.parse_tilt("0,79")
+    tilt = Input.parse_scalar("0.79")
+    tilt_pi = Input.parse_scalar("0.25p")
+    tilt_comma = Input.parse_scalar("0,79")
 
     # then
     assert tilt == model
@@ -50,7 +50,7 @@ def test_parsing_tilt_out_of_bounds():
     for tilt in tilts:
         with raises(InputParsingError) as e:
             # when
-            Input.parse_tilt(str(tilt))
+            Input.parse_scalar(str(tilt))
             # then
             assert e.value.desc == MSG_OUT_OF_BOUNDS.format("tilt", f"(0, 0.5pi)", round(tilt, MATH_PRECISION))
 

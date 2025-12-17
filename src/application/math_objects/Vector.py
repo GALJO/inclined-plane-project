@@ -16,7 +16,7 @@ permissions and limitations under the License.
 from math import sqrt
 
 from application.math_objects.Scalar import Scalar
-from infrastructure.constants import RESOLUTION
+from infrastructure.Config import RESOLUTION
 
 
 def translate_abs(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float, Scalar | float]:

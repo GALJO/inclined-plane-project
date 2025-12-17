@@ -13,7 +13,23 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
+from enum import Enum
+from typing import overload
+
+
+class InputField(Enum):
+    TILT = "TILT"
+    MASS = "MASS"
+    VELOCITY = "VELOCITY"
+    FRICTION = "FRICTION"
+
+
 class InputParsingError(Exception):
-    def __init__(self, _desc: str):
+    def __init__(self, _desc: str, field: InputField | None):
         self.desc = _desc
+        self.field = field
         self.code = "Inp.Par"
+
+    @classmethod
+    def no_field(cls, _desc: str):
+        return cls(_desc, None)

@@ -16,7 +16,7 @@ permissions and limitations under the License.
 from math import isnan
 
 from application.scalar.Scalar import Scalar
-from infrastructure.constants import MATH_PRECISION
+from infrastructure.Config import MATH_PRECISION
 
 
 def test_inits():

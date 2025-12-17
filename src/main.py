@@ -16,22 +16,24 @@ permissions and limitations under the License.
 import logging
 import sys
 from math import sin, cos, tan, radians
-from time import time
+from time import time, sleep
 
 import pygame
 import pymunk.pygame_util
 from pymunk import Arbiter, Space, Vec2d, Body
 
+from application.exceptions import InputParsingError
 from application.input.Input import Input
 from application.math_objects.Vector import *
 from application.result.Error import Error
 from application.result.Result import Measurement, Cycle, Result
-from infrastructure.constants import *
+from infrastructure.Config import *
 from infrastructure.logging_init import logging_init
 from infrastructure.ports_setup import AppPorts
 from infrastructure.print_banner import print_banner
 
 VERSION = "1.0 BETA"
+
 
 def init_space(inp: Input) -> tuple[Space, Body]:
     """
@@ -40,17 +42,30 @@ def init_space(inp: Input) -> tuple[Space, Body]:
     :returns: Set up Space object and Body object of block.
     :rtype: tuple[Space, Body]
     """
+    logging.info(f"Initializing simulation space: input={inp}")
     space = pymunk.Space()
-    space.gravity = SIM_GRAVITY
+    space.gravity = (0, G_ACCELERATION * SIM_SCALE)
 
     plane = pymunk.Segment(space.static_body, translate_abs(50, 0),
-                           translate_abs(5000, tan(inp.tilt.value) * 5000), 4)
+                           translate_abs(10000, tan(inp.tilt.value) * 10000), 4)
     plane.friction = 1
+
+    logging.debug(f"Initialized object PLANE: body={plane.body} "
+                  f"a={plane.a} "
+                  f"b={plane.b} "
+                  f"radius={plane.radius} "
+                  f"friction={plane.friction}")
 
     wall = pymunk.Segment(space.static_body, translate_abs(100, 0),
                           translate_abs(0, (100 / tan(inp.tilt.value))), 4)
     wall.elasticity = 1
     wall.collision_type = 1
+    logging.debug(f"Initialized object WALL: body={wall.body} "
+                  f"a={wall.a} "
+                  f"b={wall.b} "
+                  f"radius={wall.radius} "
+                  f"elasticity={wall.elasticity} "
+                  f"collision_type={wall.collision_type}")
 
     block_body = pymunk.Body(mass=inp.mass.value,
                              moment=pymunk.moment_for_box(sys.float_info.max,
@@ -64,12 +79,21 @@ def init_space(inp: Input) -> tuple[Space, Body]:
     block.elasticity = 1
     block.friction = inp.friction.value
     block.collision_type = 1
+    logging.debug(f"Initialized object BLOCK: body={block.body} "
+                  f"angle={block.body.angle} "
+                  f"position={block.body.position} "
+                  f"gravity_center={block.center_of_gravity} "
+                  f"elasticity={block.elasticity} "
+                  f"friction={block.friction} "
+                  f"collision_type={block.collision_type}")
 
     space.add(block_body, block, plane, wall)
+    logging.info(f"Initialized simulation space with parameters: gravity={space.gravity} "
+                 f"bodies={space.bodies}")
     return space, block_body
 
 
-def handle_block_wall_collision(arbiter: Arbiter, space: Space, data: list[Measurement]) -> None:
+def handle_collision(arbiter: Arbiter, space: Space, data: list[Measurement]) -> None:
     """
     Handler of block-wall collision. Saves the Measurement object and logs the collision.
     :param arbiter: Pymunk Arbiter - collision data object.
@@ -77,7 +101,7 @@ def handle_block_wall_collision(arbiter: Arbiter, space: Space, data: list[Measu
     :param data: List of Measurements (one of results of simulation).
     """
     data.append(Measurement(round(time(), 2), arbiter.shapes[1].body.position, arbiter.shapes[1].body.velocity))
-    logging.info(f"Block-wall collision detected, {data[-1]}")
+    logging.debug(f"Block-wall collision detected: measurement={data[-1]}")
 
 
 def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is_full: bool) -> \
@@ -97,7 +121,7 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
     display = pygame.display.set_mode(RESOLUTION)
     draw_options = pymunk.pygame_util.DrawOptions(display)
     clock = pygame.time.Clock()
-    logging.debug(f"Set up pygame display. resolution={RESOLUTION} fps={SIM_FPS}")
+    logging.debug(f"Set up pygame display: resolution={RESOLUTION} fps={SIM_FPS}")
 
     vel = inp.velocity.translated()
     block.apply_impulse_at_world_point((vel.x.value * inp.mass.value, vel.y.value * inp.mass.value),
@@ -108,7 +132,7 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
     space.on_collision(
         1,
         1,
-        handle_block_wall_collision,
+        handle_collision,
         None,
         None,
         None,
@@ -117,14 +141,13 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
 
     pygame.init()
 
-    logging.info("Running simulation.")
     start_time = Scalar(round(time(), 2), UNIT_TIME)
     start_measurement = Measurement(start_time.value, block.position, block.velocity)
-    logging.debug(f"Simulation info: start_time={start_time} "
-                  f"start_measurement={start_measurement} "
-                  f"start_pos=[{block.position.x}, {block.position.y}] "
-                  f"start_velocity=[{block.velocity.x}, {block.velocity.y}]")
-
+    logging.info("Running simulation: "
+                 f"start_time={start_time} "
+                 f"start_measurement={start_measurement} "
+                 f"start_pos={block.position} "
+                 f"start_velocity={block.velocity}")
     running = True
     while running:
         curr_time = round(time(), 2)
@@ -136,7 +159,7 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
 
         if abs(block.velocity[0]) < SIM_PRECISION and abs(block.velocity[1]) < SIM_PRECISION:
             stop_events.append(Measurement(curr_time, block.position, block.velocity))
-            logging.info(f"Block stop detected, {stop_events[-1]}")
+            logging.debug(f"Block stop detected: measurement={stop_events[-1]}")
 
         display.fill((65, 65, 65))
         space.debug_draw(draw_options)
@@ -147,11 +170,12 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
 
     end_time = Scalar(round(time(), 2), UNIT_TIME)
     end_measurement = Measurement(end_time.value, block.position, block.velocity)
-    logging.info(f"Simulation finished. duration={end_time - start_time}")
-    logging.debug(f"Simulation info: end_time={end_time} "
-                  f"end_measurement={end_measurement} "
-                  f"detected wall-block collisions n={len(collision_events)} events={collision_events} "
-                  f"detected block stops n={len(stop_events)} events={stop_events} ")
+    logging.info(f"Simulation finished: "
+                 f"duration={end_time - start_time} "
+                 f"end_time={end_time} "
+                 f"end_measurement={end_measurement} "
+                 f"wall-block collisions n={len(collision_events)}"
+                 f"block stops n={len(stop_events)}")
 
     collision_events.insert(0, start_measurement)
     collision_events.append(end_measurement)
@@ -167,7 +191,7 @@ def collect_cycles(stop_events: list[Measurement], collision_events: list[Measur
     :return: List of Cycle objects based on simulation events.
     :rtype: list[Cycle]
     """
-    logging.debug(f"Collecting cycles. stop_events={stop_events} collision_events={collision_events}")
+    logging.debug(f"Collecting cycles.")
     cycles = []
     measurement_ndx = 0
     cycle_i = 0
@@ -182,9 +206,9 @@ def collect_cycles(stop_events: list[Measurement], collision_events: list[Measur
             measurement_ndx += 1
         if event.time != -1:
             cycles.append(Cycle(cycle_i, start, event, end))
-            logging.debug(f"Collected cycle, {cycles[-1]}")
+            logging.debug(f"Collected cycle: cycle={cycles[-1]}")
             cycle_i += 1
-    logging.debug(f"Collected cycles, n={len(cycles)}")
+    logging.info(f"Collected cycles: n={len(cycles)}")
     return cycles
 
 
@@ -198,20 +222,23 @@ def prepare_results(stop_events: list[Measurement], collision_events: list[Measu
     Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
     :return: List with Result object for each cycle.
     """
-    logging.info(f"Preparing results, stop_events={stop_events} collision_events={collision_events} is_full={is_full}")
+    logging.info(f"Preparing simulation results: is_full={is_full}")
     results = []
     cycles = collect_cycles(stop_events, collision_events)
     for cycle in cycles:
         results.append(Result.measured(cycle, is_full))
-        logging.info(f"Prepared result, result={results[-1]}")
-    logging.info(f"Prepared results, n={len(results)}")
+        logging.debug(f"Prepared result: result={results[-1]} cycle={cycle}")
+    logging.info(f"Prepared simulation results: n={len(results)}")
     return results
 
 
 def prepare_errors(measured: list[Result], model: list[Result]) -> list[Error]:
+    logging.debug(f"Preparing errors.")
     errors = []
     for i in range(0, len(model)):
         errors.append(Error(measured[i], model[i]))
+        logging.debug(f"Prepared error: error={errors[-1]} measured={measured[i]} model={model[i]}")
+    logging.info(f"Prepared errors: n={len(errors)}")
     return errors
 
 
@@ -221,23 +248,22 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
     :param user_input: Input data.
     :return: List with Result object for each cycle.
     """
-    logging.debug(f"Calculating model: input={user_input}")
-    g = abs(SIM_GRAVITY[1] / SIM_SCALE)
+    logging.info(f"Calculating model: input={user_input}")
     results = [Result.model(0,
                             user_input.velocity,
                             user_input.tilt.value,
                             user_input.friction.value,
-                            g,
+                            G_ACCELERATION,
                             False)]
     if (user_input.friction * cos(user_input.tilt.value)) / (sin(user_input.tilt.value)) >= 1:
         logging.debug(f"Not full cycle detected! result={results[0]}")
-        logging.info(f"Calculated model: N={len(results)} results={results}")
+        logging.debug(f"Calculated model: N={len(results)} results={results}")
 
     results = [Result.model(0,
                             user_input.velocity,
                             user_input.tilt.value,
                             user_input.friction.value,
-                            g,
+                            G_ACCELERATION,
                             True)]
     logging.debug(f"Calculated model result: n={0} result={results[-1]}")
     i = 1
@@ -246,7 +272,7 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
                                     results[-1].end_velocity,
                                     user_input.tilt.value,
                                     user_input.friction.value,
-                                    g,
+                                    G_ACCELERATION,
                                     True))
         logging.debug(f"Calculated model result: n={i} result={results[-1]}")
         i += 1
@@ -255,28 +281,45 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
     return results
 
 
+def handle_error(e: InputParsingError) -> None:
+    print(f"Wrong {e.field.name} field given: {e.desc} ({e.code})")
+
+
 def read_console() -> Input:
     """
     Reads user's input from console.
     :returns: User Input.
     """
-    angle = input("Tilt of plane (rad) (0; pi/2) = ")
-    friction = input("Friction coefficient (Coulomb friction) (0;inf) = ")
-    mass = input("Block's mass (kg) (0;inf) = ")
-    velocity = input("Starting velocity (m/s) (parallel to slope) (0;inf) = ")
-    inp = Input.user(angle, mass, velocity, friction)
-    logging.debug("Read user's input: ", inp)
-    return inp
+    i = 0
+    while True:
+        logging.info(f"Reading input: trial nr {i}")
+        angle = input("Tilt of plane (rad) (0, 0.5pi) = ")
+        logging.debug(f"Received input: angle={angle}")
+        friction = input("Friction coefficient (Coulomb friction) (0, inf) = ")
+        logging.debug(f"Received input: friction={friction}")
+        mass = input("Block's mass (kg) (0, inf) = ")
+        logging.debug(f"Received input: mass={mass}")
+        velocity = input("Starting velocity (m/s) (parallel to slope) (0, inf) = ")
+        logging.debug(f"Received input: velocity={velocity}")
+        try:
+            inp = Input.user(angle, mass, velocity, friction)
+            logging.info(f"Successfully read input after {i+1} trial(s): input={inp}")
+            return inp
+        except InputParsingError as e:
+            logging.error(f"Error while reading user's input - retrying to get input: e={e}")
+            handle_error(e)
+            i += 1
+
+
 
 
 def main():
-    print_banner(VERSION)
     logging_init()
+    print_banner(VERSION)
 
     ports = AppPorts()
 
     user_input = read_console()
-    # user_input = Input.user("0.7854", "1", "20", "0.5")
     simulation_input = Input.simulation(user_input)
 
     model = calculate_theoretical_model(user_input)

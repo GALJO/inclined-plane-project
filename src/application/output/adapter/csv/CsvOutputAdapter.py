@@ -14,6 +14,7 @@ or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
 import csv
+import logging
 from pathlib import Path
 
 from application.math_objects.Scalar import Scalar
@@ -43,17 +44,32 @@ SUFFIX_Y = "_y"
 class CsvOutputAdapter(OutputPort):
     """
     OutputPort adapter for saving data to CSV file.
+    Attributes
+    ----------
+    path: Path
+        Path object specifying path to CSV output file.
     """
 
     def __init__(self, output_path: Path):
         self.path: Path = output_path
 
     def send_output(self, measured: list[Result], model: list[Result], error: list[Error]) -> None:
+        """
+        Saves output to CSV file specified in path
+        :param measured: A list of measured Result objects.
+        :param model: A list of model Result objects.
+        :param error: A list of Error objects for given Result objects.
+        """
+        logging.info(f"Sending results to CSV file: measured={measured} model={model} error={error}")
         with open(self.path.absolute(), "w", newline="") as output:
             writer = csv.DictWriter(output, fieldnames=get_dict(measured[0], model[0], error[0]).keys())
             writer.writeheader()
+            logging.debug(f"Wrote CSV headers: {writer.fieldnames}")
             for i in range(0, len(model)):
-                writer.writerow(get_dict(measured[i], model[i], error[i]))
+                row = get_dict(measured[i], model[i], error[i])
+                writer.writerow(row)
+                logging.debug(f"Wrote row: n={i} row={row}")
+        logging.info(f"Output saved: rows={len(model)} path={self.path.absolute()}")
 
 
 def dictionaries_update(output: tuple, inp: tuple) -> None:
@@ -89,7 +105,7 @@ def get_scalar_dicts(key: str, measured: Scalar, model: Scalar, error: ScalarErr
     return (
         {key + SUFFIX_MEASURED: measured.value},
         {key + SUFFIX_MODEL: model.value},
-        {PREFIX_ERROR + key: error.abs, PREFIX_RELATIVE_ERROR + key: error.rel}
+        {PREFIX_ERROR + key: error.abs.value, PREFIX_RELATIVE_ERROR + key: error.rel.value}
     )
 
 
@@ -117,7 +133,7 @@ def get_vector_dicts(key: str, measured: Vector, model: Vector, error: VectorErr
 
 def get_dict(measured: Result, model: Result, error: Error) -> dict:
     """
-    Creates dict from Result data for CSV output.
+    Creates a dict from Result data for CSV output.
     :param measured: Measured Result.
     :param model: Model Result
     :param error: Results Error object.
@@ -148,4 +164,5 @@ def get_dict(measured: Result, model: Result, error: Error) -> dict:
     result.update(model_dict)
     result.update(error_dict)
     result.update(get_any_dict(IS_FULL, model.is_full))
+    logging.debug(f"Created dict for data: dict={result} measured={measured} model={model} error={error}")
     return result

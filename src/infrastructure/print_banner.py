@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
+import logging
 from pathlib import Path
 
 
@@ -20,5 +21,5 @@ def print_banner(version: str):
     banner = open(Path(__file__).parent.parent.parent.joinpath("BANNER"), "r")
     notice = open(Path(__file__).parent.parent.parent.joinpath("NOTICE"), "r")
 
-    print(notice.read())
-    print(banner.read(), version)
+    logging.info("\n" + notice.read())
+    logging.info(banner.read(), version)

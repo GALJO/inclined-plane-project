@@ -16,7 +16,7 @@ permissions and limitations under the License.
 import logging
 from time import sleep
 
-from infrastructure.constants import LOG_LEVEL
+from infrastructure.Config import LOG_LEVEL
 
 
 def logging_init():
@@ -31,26 +31,25 @@ def logging_init():
     logger.handlers.clear()
     logger.setLevel(_loglevel)
     logger.addHandler(ch)
-    sleep(0.1)
     logging.info("Logging activated")
 
 
 class CustomFormatter(logging.Formatter):
     def format(self, record: logging.LogRecord):
-        no_style = '\033[37m'
+        white = '\033[97m'
         bold = '\033[91m'
-        grey = '\033[90m'
+        grey = '\033[37m'
         yellow = '\033[93m'
         red = '\033[31m'
         red_light = '\033[91m'
         start_style = {
             'DEBUG': grey,
-            'INFO': no_style,
+            'INFO': white,
             'WARNING': yellow,
             'ERROR': red,
             'CRITICAL': red_light + bold,
-        }.get(record.levelname, no_style)
-        end_style = no_style
+        }.get(record.levelname, white)
+        end_style = white
         return f'{start_style}{super().format(record)}{end_style}'
 
 

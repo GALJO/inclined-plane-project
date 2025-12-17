@@ -19,7 +19,7 @@ from pymunk import Vec2d
 
 from application.math_objects.Scalar import Scalar
 from application.math_objects.Vector import translate_abs, Vector, translate
-from infrastructure.constants import UNIT_TIME, UNIT_VELOCITY, UNIT_DISTANCE, SIM_SCALE
+from infrastructure.Config import UNIT_TIME, UNIT_VELOCITY, UNIT_DISTANCE, SIM_SCALE
 
 
 class Measurement:

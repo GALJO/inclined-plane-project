@@ -15,7 +15,7 @@ permissions and limitations under the License.
 """
 from application.scalar.Scalar import Scalar
 from application.math_objects.Vector import translate, translate_abs
-from infrastructure.constants import RESOLUTION
+from infrastructure.Config import RESOLUTION
 
 
 def test_translation_scalar():

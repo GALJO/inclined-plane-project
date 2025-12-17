@@ -17,7 +17,7 @@ import logging
 from pathlib import Path
 
 from application.output.adapter.csv.CsvOutputAdapter import CsvOutputAdapter
-from infrastructure.constants import OUTPUT_PORT, OUTPUT_CSV_PATH
+from infrastructure.Config import OUTPUT_PORT, OUTPUT_CSV_PATH
 
 
 class AppPorts:

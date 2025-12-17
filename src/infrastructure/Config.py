@@ -13,10 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
+from math import pi
+
 RESOLUTION = (800, 800)
 LOG_LEVEL = "DEBUG"
 
 MATH_PRECISION = 10
+
+G_ACCELERATION = 9.81
 
 UNIT_VELOCITY = "m/s"
 UNIT_TILT = "rad"
@@ -25,8 +29,16 @@ UNIT_MASS = "kg"
 UNIT_DISTANCE = "m"
 UNIT_TIME = "s"
 
+TILT_MIN = 0
+TILT_MAX = round(0.5 * pi, MATH_PRECISION)
+MASS_MIN = 0
+MASS_MAX = None
+VELOCITY_MIN = 0
+VELOCITY_MAX = None
+FRICTION_MIN = 0
+FRICTION_MAX = None
+
 SIM_SCALE = 10
-SIM_GRAVITY = (0, 9.81 * SIM_SCALE)
 SIM_PRECISION = 0.1 * SIM_SCALE
 SIM_BLOCK_SIZE = 40
 SIM_FPS = 60

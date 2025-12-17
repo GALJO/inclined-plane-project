@@ -16,29 +16,7 @@ permissions and limitations under the License.
 import functools
 from math import nan
 
-from infrastructure.constants import MATH_PRECISION
-
-
-def is_number(o) -> bool:
-    """
-    Checks if operand is a number.
-    :param o: Operand.
-    :returns: True if o is number, False otherwise.
-    """
-    if type(o) == int or type(o) == float:
-        return True
-    return False
-
-
-def is_scalar(o):
-    """
-    Checks if operand is a Scalar.
-    :param o: Operand.
-    :returns: True if o is Scalar, False otherwise.
-    """
-    if hasattr(o, "value") and hasattr(o, "unit"):
-        return True
-    return False
+from infrastructure.Config import MATH_PRECISION
 
 
 @functools.total_ordering
@@ -153,6 +131,27 @@ class Scalar:
         else:
             return NotImplemented
 
-
     def __str__(self):
         return f"{self.value}{self.unit}" if self.unit is not None else f"{self.value}"
+
+
+def is_number(o) -> bool:
+    """
+    Checks if operand is a number.
+    :param o: Operand.
+    :returns: True if o is number, False otherwise.
+    """
+    if type(o) == int or type(o) == float:
+        return True
+    return False
+
+
+def is_scalar(o):
+    """
+    Checks if operand is a Scalar.
+    :param o: Operand.
+    :returns: True if o is Scalar, False otherwise.
+    """
+    if hasattr(o, "value") and hasattr(o, "unit"):
+        return True
+    return False
