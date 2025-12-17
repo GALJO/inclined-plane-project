@@ -16,7 +16,7 @@ permissions and limitations under the License.
 from math import sqrt
 
 from application.math_objects.Scalar import Scalar
-from infrastructure.Config import RESOLUTION
+from infrastructure.config.config import SIM_RESOLUTION
 
 
 def translate_abs(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float, Scalar | float]:
@@ -28,7 +28,7 @@ def translate_abs(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float,
     :returns: (x, y) - translated coordinate
     :rtype: tuple[float, float]
     """
-    return x, y * -1 + RESOLUTION[1]
+    return x, y * -1 + SIM_RESOLUTION[1]
 
 
 def translate(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float, Scalar | float]:

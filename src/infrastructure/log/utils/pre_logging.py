@@ -14,22 +14,19 @@ or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
 import logging
+from logging import DEBUG
 from pathlib import Path
 
-from application.output.adapter.csv.CsvOutputAdapter import CsvOutputAdapter
-from infrastructure.Config import OUTPUT_PORT, OUTPUT_CSV_PATH
+from infrastructure.log.utils.logging_utils import FORMAT
+
+INIT_LOG = Path("./init.log")
 
 
-class AppPorts:
-    def __init__(self):
-        self.output_port = configure_output_port()
-
-
-def configure_output_port():
-    match OUTPUT_PORT:
-        case "CSV":
-            logging.info("Chosen output configuration: CSV")
-            return CsvOutputAdapter(Path(OUTPUT_CSV_PATH))
-        case _:
-            logging.critical("ABORTING INIT - unknown LOG_LEVEL constant.")
-            exit(1)
+def init_pre_logging() -> None:
+    ch = logging.FileHandler(INIT_LOG.absolute(), "w")
+    ch.setLevel(DEBUG)
+    ch.setFormatter(logging.Formatter(FORMAT))
+    logger = logging.getLogger()
+    logger.setLevel(DEBUG)
+    logger.addHandler(ch)
+    logging.warning(f"Pre-setup log activated: log_file={INIT_LOG.absolute()}")

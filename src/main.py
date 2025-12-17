@@ -13,10 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-import logging
 import sys
 from math import sin, cos, tan, radians
-from time import time, sleep
+from pathlib import Path
+from time import time
 
 import pygame
 import pymunk.pygame_util
@@ -27,12 +27,14 @@ from application.input.Input import Input
 from application.math_objects.Vector import *
 from application.result.Error import Error
 from application.result.Result import Measurement, Cycle, Result
-from infrastructure.Config import *
-from infrastructure.logging_init import logging_init
-from infrastructure.ports_setup import AppPorts
+from infrastructure.AppPorts import AppPorts
+from infrastructure.config.config import *
+from infrastructure.config.set_config import Config
+from infrastructure.log.utils.pre_logging import init_pre_logging
 from infrastructure.print_banner import print_banner
 
 VERSION = "1.0 BETA"
+CONFIG_PATH = "./config.yaml"
 
 
 def init_space(inp: Input) -> tuple[Space, Body]:
@@ -44,7 +46,7 @@ def init_space(inp: Input) -> tuple[Space, Body]:
     """
     logging.info(f"Initializing simulation space: input={inp}")
     space = pymunk.Space()
-    space.gravity = (0, G_ACCELERATION * SIM_SCALE)
+    space.gravity = (0, G * SIM_SCALE)
 
     plane = pymunk.Segment(space.static_body, translate_abs(50, 0),
                            translate_abs(10000, tan(inp.tilt.value) * 10000), 4)
@@ -118,10 +120,10 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
     second one with detected block stop events - and duration of simulation.
     Second list also contains measures taken at start and end of the simulation.
     """
-    display = pygame.display.set_mode(RESOLUTION)
+    display = pygame.display.set_mode(SIM_RESOLUTION)
     draw_options = pymunk.pygame_util.DrawOptions(display)
     clock = pygame.time.Clock()
-    logging.debug(f"Set up pygame display: resolution={RESOLUTION} fps={SIM_FPS}")
+    logging.debug(f"Set up pygame display: resolution={SIM_RESOLUTION} fps={SIM_FPS}")
 
     vel = inp.velocity.translated()
     block.apply_impulse_at_world_point((vel.x.value * inp.mass.value, vel.y.value * inp.mass.value),
@@ -157,7 +159,8 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
         if (not is_full and len(stop_events) > 10) or (is_full and len(collision_events) > model_cycles_amount):
             running = False
 
-        if abs(block.velocity[0]) < SIM_PRECISION and abs(block.velocity[1]) < SIM_PRECISION:
+        if abs(block.velocity[0]) < (MEASURE_PRECISION * SIM_SCALE) and abs(block.velocity[1]) < (
+                MEASURE_PRECISION * SIM_SCALE):
             stop_events.append(Measurement(curr_time, block.position, block.velocity))
             logging.debug(f"Block stop detected: measurement={stop_events[-1]}")
 
@@ -253,7 +256,7 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
                             user_input.velocity,
                             user_input.tilt.value,
                             user_input.friction.value,
-                            G_ACCELERATION,
+                            G,
                             False)]
     if (user_input.friction * cos(user_input.tilt.value)) / (sin(user_input.tilt.value)) >= 1:
         logging.debug(f"Not full cycle detected! result={results[0]}")
@@ -263,16 +266,16 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
                             user_input.velocity,
                             user_input.tilt.value,
                             user_input.friction.value,
-                            G_ACCELERATION,
+                            G,
                             True)]
     logging.debug(f"Calculated model result: n={0} result={results[-1]}")
     i = 1
-    while results[-1].end_velocity.value > SIM_PRECISION / SIM_SCALE:
+    while results[-1].end_velocity.value > MEASURE_PRECISION:
         results.append(Result.model(i,
                                     results[-1].end_velocity,
                                     user_input.tilt.value,
                                     user_input.friction.value,
-                                    G_ACCELERATION,
+                                    G,
                                     True))
         logging.debug(f"Calculated model result: n={i} result={results[-1]}")
         i += 1
@@ -303,7 +306,7 @@ def read_console() -> Input:
         logging.debug(f"Received input: velocity={velocity}")
         try:
             inp = Input.user(angle, mass, velocity, friction)
-            logging.info(f"Successfully read input after {i+1} trial(s): input={inp}")
+            logging.info(f"Successfully read input after {i + 1} trial(s): input={inp}")
             return inp
         except InputParsingError as e:
             logging.error(f"Error while reading user's input - retrying to get input: e={e}")
@@ -311,13 +314,13 @@ def read_console() -> Input:
             i += 1
 
 
-
-
 def main():
-    logging_init()
-    print_banner(VERSION)
-
+    init_pre_logging()
+    Config(Path(CONFIG_PATH)).set()
     ports = AppPorts()
+    ports.log_port.setup()
+
+    print_banner(VERSION)
 
     user_input = read_console()
     simulation_input = Input.simulation(user_input)

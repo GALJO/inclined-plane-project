@@ -13,13 +13,12 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-import logging
 from math import cos, sin
 
 from application.exceptions import InputParsingError, InputField
 from application.math_objects.Scalar import Scalar
 from application.math_objects.Vector import Vector
-from infrastructure.Config import *
+from infrastructure.config.config import *
 
 MSG_TOO_BIG = "Input value too big. Max={} Given={}"
 MSG_TOO_SMALL = "Input value too small. Min={} Given={}"
@@ -81,13 +80,13 @@ class Input:
             Input instance.
         """
         try:
-            tilt = parse_scalar(_tilt, UNIT_TILT, TILT_MIN, TILT_MAX)
+            tilt = parse_scalar(_tilt, UNIT_TILT, MIN_TILT, MAX_TILT)
         except InputParsingError as e:
             logging.error(f"Error while parsing user's input: e={e} tilt={_tilt}")
             raise InputParsingError(e.desc, InputField.TILT)
 
         try:
-            mass = parse_scalar(_mass, UNIT_MASS, MASS_MIN, MASS_MAX)
+            mass = parse_scalar(_mass, UNIT_MASS, MIN_MASS, MAX_MASS)
         except InputParsingError as e:
             logging.error(f"Error while parsing user's input: mass={_mass}")
             raise InputParsingError(e.desc, InputField.MASS)
@@ -99,7 +98,7 @@ class Input:
             raise InputParsingError(e.desc, InputField.VELOCITY)
 
         try:
-            friction = parse_scalar(_friction, None, FRICTION_MIN, FRICTION_MAX)
+            friction = parse_scalar(_friction, None, MIN_FRICTION, MAX_FRICTION)
         except InputParsingError as e:
             logging.error(f"Error while parsing user's input: e={e} friction={_friction}")
             raise InputParsingError(e.desc, InputField.FRICTION)
@@ -198,5 +197,5 @@ def parse_velocity(velocity: str, tilt: Scalar) -> Vector:
         Parsed user's velocity.
     """
     scalar = convert_to_scalar(velocity, UNIT_VELOCITY)
-    check_bounds(scalar, VELOCITY_MIN, VELOCITY_MAX)
+    check_bounds(scalar, MIN_VELOCITY, MAX_VELOCITY)
     return Vector(scalar * cos(tilt.value), scalar * sin(tilt.value))

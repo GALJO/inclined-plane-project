@@ -14,12 +14,22 @@ or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
 import logging
-from pathlib import Path
+
+FORMAT = "[%(asctime)s] [%(levelname)s] || [%(funcName)s] %(filename)s :: %(message)s"
 
 
-def print_banner(version: str):
-    banner = open(Path(__file__).parent.parent.parent.joinpath("BANNER"), "r").read()
-    notice = open(Path(__file__).parent.parent.parent.joinpath("NOTICE"), "r").read()
-
-    logging.info("\n" + notice + "\n" + banner.format(version))
-    print("\n" + notice + "\n" + banner.format(version))
+def get_loglevel(_loglevel: str):
+    match _loglevel:
+        case "DEBUG":
+            return logging.DEBUG
+        case "INFO":
+            return logging.INFO
+        case "WARN":
+            return logging.WARN
+        case "ERROR":
+            return logging.ERROR
+        case "CRITICAL":
+            return logging.CRITICAL
+        case _:
+            logging.critical("CRASH -- unknown LOG_LEVEL config field.")
+            exit(-100)

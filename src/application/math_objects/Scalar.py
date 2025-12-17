@@ -16,7 +16,7 @@ permissions and limitations under the License.
 import functools
 from math import nan
 
-from infrastructure.Config import MATH_PRECISION
+from infrastructure.config.config import MATH_PRECISION
 
 
 @functools.total_ordering

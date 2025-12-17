@@ -20,7 +20,7 @@ from pytest.raises import raises
 from application.input.Input import Input, MSG_OUT_OF_BOUNDS
 from application.scalar.Scalar import Scalar
 from application.math_objects.Vector import Vector
-from infrastructure.Config import UNIT_TILT, UNIT_MASS, UNIT_VELOCITY, MATH_PRECISION
+from infrastructure.config.Config import UNIT_TILT, UNIT_MASS, UNIT_VELOCITY, MATH_PRECISION
 
 
 from application.exceptions import InputParsingError

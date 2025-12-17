@@ -43,7 +43,7 @@ class ScalarError:
         self.rel = self.abs / x if x != 0 else Scalar.nan()
 
     def __str__(self):
-        return f"SError(abs={self.abs}, rel={self.rel})"
+        return f"ScalarError(abs={self.abs}, rel={self.rel})"
 
 
 class VectorError:
@@ -74,7 +74,7 @@ class VectorError:
         self.value = ScalarError(vec.value, vec0.value)
 
     def __str__(self):
-        return f"VError(x={self.x}, y={self.y}, value={self.value})"
+        return f"VectorError(x={self.x}, y={self.y}, value={self.value})"
 
 
 class Error:
