@@ -29,12 +29,13 @@ from application.math_objects.Vector import *
 from application.result.Error import Error
 from application.result.Result import Measurement, Cycle, Result
 from infrastructure.AppPorts import AppPorts
+from infrastructure.catcher import catcher
 from infrastructure.config.Config import CONFIG
 from infrastructure.log.utils.pre_logging import init_pre_logging
 from infrastructure.print_banner import print_banner
 
 VERSION = "1.0 BETA"
-CONFIG_PATH = Path("./config.yaml")
+CONFIG_PATH = Path("./config/config.yaml")
 
 
 def init_space(inp: Input) -> tuple[Space, Body]:
@@ -314,6 +315,7 @@ def read_console() -> Input:
             i += 1
 
 
+@catcher
 def main():
     init_pre_logging()
     CONFIG.update(CONFIG_PATH)

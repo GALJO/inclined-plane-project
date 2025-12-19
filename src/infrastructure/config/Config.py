@@ -14,6 +14,7 @@ or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
 import logging
+import os
 from math import pi
 from pathlib import Path
 
@@ -90,7 +91,7 @@ class Config:
         struct.setdefault(ConfigName.log.value, {})
         struct[ConfigName.log.value].setdefault(ConfigName.port.value, self.log_port)
         struct[ConfigName.log.value].setdefault(ConfigName.level.value, self.log_level)
-        struct[ConfigName.log.value].setdefault(ConfigName.path.value, self.log_path)
+        struct[ConfigName.log.value].setdefault(ConfigName.path.value, self.log_path.__str__())
 
         struct.setdefault(ConfigName.input.value, {})
         struct[ConfigName.input.value].setdefault(ConfigName.port.value, self.input.port)
@@ -105,7 +106,7 @@ class Config:
 
         struct.setdefault(ConfigName.output.value, {})
         struct[ConfigName.output.value].setdefault(ConfigName.port.value, self.output_port)
-        struct[ConfigName.output.value].setdefault(ConfigName.path.value, self.output_path)
+        struct[ConfigName.output.value].setdefault(ConfigName.path.value, self.output_path.__str__())
 
         struct.setdefault(ConfigName.sim.value, {})
         struct[ConfigName.sim.value].setdefault(ConfigName.resolution.value,
@@ -117,14 +118,15 @@ class Config:
         struct.setdefault(ConfigName.math_precision.value, self.math_precision)
         struct.setdefault(ConfigName.measure_precision.value, self.measure_precision)
         struct.setdefault(ConfigName.g.value, self.g)
-        with open(path, "w") as conf:
+        os.makedirs(os.path.dirname(path.absolute()), exist_ok=True)
+        with open(path.absolute(), "w") as conf:
             yaml.dump(struct, conf)
         logging.debug(f"Generated a default config file: insides={struct}")
 
     def update(self, path: Path):
-        logging.info(f"Loading the config from a file: path={path}")
+        logging.info(f"Loading the config from a file: path={path.absolute()}")
         if not path.exists():
-            logging.warning(f"A config file does not exists; generating a new one: path={path}")
+            logging.warning(f"A config file does not exists; generating a new one: path={path.absolute()}")
             self.generate_file(path)
         with open(path, "r") as conf:
             config = yaml.safe_load(conf)

@@ -3,4 +3,6 @@
 *.yaml
 *.log
 .idea
+dist
+build
 Pipfile.lock
