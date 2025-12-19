@@ -4,14 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-pygame = "==2.6.1"
-pymunk = "==7.2.0"
-pytest = "==9.0.1"
-pipenv = "==2026.0.2"
-pyinstaller = "==6.17.0"
-pyyaml = "6.0.3"
+pygame-ce = "2.5.*"
+pymunk = "7.2.*"
+pyinstaller = "6.17.*"
+pyyaml = "6.0.*"
+
 
 [dev-packages]
 
 [requires]
-python_version = "3.12"
+python_version = "3.14"

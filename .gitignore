@@ -2,6 +2,7 @@
 *.txt
 *.yaml
 *.log
+*.spec
 .idea
 dist
 build
