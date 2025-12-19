@@ -17,7 +17,7 @@ import logging
 from pathlib import Path
 
 from application.output.adapter.csv.CsvOutputAdapter import CsvOutputAdapter
-from infrastructure.config.config import OUTPUT_PORT, OUTPUT_PATH, LOG_PORT, LOG_LEVEL, LOG_PATH
+from infrastructure.config.Config import CONFIG
 from infrastructure.log.adapter.ConsoleLogAdapter import ConsoleLogAdapter
 from infrastructure.log.adapter.FileLogAdapter import FileLogAdapter
 
@@ -29,25 +29,28 @@ class AppPorts:
 
 
 def configure_log_port():
-    match LOG_PORT:
+    match CONFIG.log_port:
         case "CONSOLE":
             logging.info("Chosen log configuration: CONSOLE")
-            return ConsoleLogAdapter(LOG_LEVEL)
+            return ConsoleLogAdapter(CONFIG.log_level)
         case "FILE":
             logging.info("Chosen log configuration: FILE")
-            if LOG_PATH is None:
-                logging.critical("EXIT -- unknown LOG_PATH config field.")
-            return FileLogAdapter(LOG_LEVEL, Path(LOG_PATH))
+            if CONFIG.output_path is None:
+                logging.critical("INIT FAIL -- no log.path config.")
+                exit(1)
+            return FileLogAdapter(CONFIG.log_level, CONFIG.log_path)
         case _:
-            logging.critical("EXIT -- unknown LOG_PORT config field.")
-            exit(-201)
+            logging.critical("INIT FAIL -- unknown log.port config.")
+            exit(1)
 
 
 def configure_output_port():
-    match OUTPUT_PORT:
+    match CONFIG.output_port:
         case "CSV":
             logging.info("Chosen output configuration: CSV")
-            return CsvOutputAdapter(Path(OUTPUT_PATH))
+            if CONFIG.output_path is None:
+                logging.critical("INIT FAIL -- no output.path config.")
+            return CsvOutputAdapter(CONFIG.output_path)
         case _:
-            logging.critical("EXIT -- unknown OUTPUT_PORT config field.")
-            exit(-202)
+            logging.critical("INIT FAIL -- unknown output.port config.")
+            exit(1)

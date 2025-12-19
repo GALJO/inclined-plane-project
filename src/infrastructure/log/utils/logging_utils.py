@@ -18,8 +18,8 @@ import logging
 FORMAT = "[%(asctime)s] [%(levelname)s] || [%(funcName)s] %(filename)s :: %(message)s"
 
 
-def get_loglevel(_loglevel: str):
-    match _loglevel:
+def get_level(level: str):
+    match level:
         case "DEBUG":
             return logging.DEBUG
         case "INFO":
@@ -31,5 +31,5 @@ def get_loglevel(_loglevel: str):
         case "CRITICAL":
             return logging.CRITICAL
         case _:
-            logging.critical("CRASH -- unknown LOG_LEVEL config field.")
-            exit(-100)
+            logging.critical("EXIT -- unknown log level.")
+            exit(1)

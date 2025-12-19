@@ -13,12 +13,14 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-from math import cos, sin
+import logging
+from math import cos, sin, pi
 
-from application.exceptions import InputParsingError, InputField
+from application.input.exceptions import InputParsingError
+from application.input.model.InputField import InputField
 from application.math_objects.Scalar import Scalar
 from application.math_objects.Vector import Vector
-from infrastructure.config.config import *
+from infrastructure.config.Config import CONFIG
 
 MSG_TOO_BIG = "Input value too big. Max={} Given={}"
 MSG_TOO_SMALL = "Input value too small. Min={} Given={}"
@@ -60,18 +62,18 @@ class Input:
         self.friction = _friction
 
     @classmethod
-    def user(cls, _tilt: str, _mass: str, _velocity: str, _friction: str):
+    def user(cls, tilt: str, mass: str, velocity: str, friction: str):
         """
         Creates Input instance from user input.
         Parameters
         ----------
-        _tilt: str
+        tilt: str
             Tilt from user's input.
-        _mass: str
+        mass: str
             Mass from user's input.
-        _velocity: str
+        velocity: str
             Velocity from user's input.
-        _friction: str
+        friction: str
             Friction from user's input.
 
         Returns
@@ -80,29 +82,29 @@ class Input:
             Input instance.
         """
         try:
-            tilt = parse_scalar(_tilt, UNIT_TILT, MIN_TILT, MAX_TILT)
+            s_tilt = parse_scalar(tilt, CONFIG.unit.tilt, CONFIG.input.min_tilt, CONFIG.input.max_tilt)
         except InputParsingError as e:
-            logging.error(f"Error while parsing user's input: e={e} tilt={_tilt}")
+            logging.error(f"Error while parsing user's input: e={e} tilt={tilt}")
             raise InputParsingError(e.desc, InputField.TILT)
 
         try:
-            mass = parse_scalar(_mass, UNIT_MASS, MIN_MASS, MAX_MASS)
+            s_mass = parse_scalar(mass, CONFIG.unit.mass, CONFIG.input.min_mass, CONFIG.input.max_mass)
         except InputParsingError as e:
-            logging.error(f"Error while parsing user's input: mass={_mass}")
+            logging.error(f"Error while parsing user's input: mass={mass}")
             raise InputParsingError(e.desc, InputField.MASS)
 
         try:
-            velocity = parse_velocity(_velocity, tilt)
+            s_vel = parse_velocity(velocity, s_tilt)
         except InputParsingError as e:
-            logging.error(f"Error while parsing user's input: e={e} velocity={_velocity}")
+            logging.error(f"Error while parsing user's input: e={e} velocity={velocity}")
             raise InputParsingError(e.desc, InputField.VELOCITY)
 
         try:
-            friction = parse_scalar(_friction, None, MIN_FRICTION, MAX_FRICTION)
+            s_friction = parse_scalar(friction, None, CONFIG.input.min_friction, CONFIG.input.max_friction)
         except InputParsingError as e:
-            logging.error(f"Error while parsing user's input: e={e} friction={_friction}")
+            logging.error(f"Error while parsing user's input: e={e} friction={friction}")
             raise InputParsingError(e.desc, InputField.FRICTION)
-        return cls(tilt, mass, velocity, friction)
+        return cls(s_tilt, s_mass, s_vel, s_friction)
 
     @classmethod
     def simulation(cls, _user_input):
@@ -113,8 +115,8 @@ class Input:
         """
         return cls(
             _user_input.tilt,
-            _user_input.mass * SIM_SCALE,
-            _user_input.velocity * SIM_SCALE,
+            _user_input.mass * CONFIG.scale,
+            _user_input.velocity * CONFIG.scale,
             _user_input.friction
         )
 
@@ -122,9 +124,9 @@ class Input:
         """
         Converts to string.
         """
-        return (f"Input(tilt={self.tilt}, "
-                f"mass={self.mass}, "
-                f"velocity={self.velocity}, "
+        return (f"Input(tilt={self.tilt} "
+                f"mass={self.mass} "
+                f"velocity={self.velocity} "
                 f"friction={self.friction})")
 
 
@@ -196,6 +198,6 @@ def parse_velocity(velocity: str, tilt: Scalar) -> Vector:
     velocity: Vector
         Parsed user's velocity.
     """
-    scalar = convert_to_scalar(velocity, UNIT_VELOCITY)
-    check_bounds(scalar, MIN_VELOCITY, MAX_VELOCITY)
+    scalar = convert_to_scalar(velocity, CONFIG.unit.velocity)
+    check_bounds(scalar, CONFIG.input.min_velocity, CONFIG.input.max_velocity)
     return Vector(scalar * cos(tilt.value), scalar * sin(tilt.value))

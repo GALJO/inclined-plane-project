@@ -14,15 +14,17 @@ or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
 import logging
+import os.path
 from logging import DEBUG
 from pathlib import Path
 
 from infrastructure.log.utils.logging_utils import FORMAT
 
-INIT_LOG = Path("./init.log")
+INIT_LOG = Path("./log/init.log")
 
 
 def init_pre_logging() -> None:
+    os.makedirs(os.path.dirname(INIT_LOG.absolute()), exist_ok=True)
     ch = logging.FileHandler(INIT_LOG.absolute(), "w")
     ch.setLevel(DEBUG)
     ch.setFormatter(logging.Formatter(FORMAT))

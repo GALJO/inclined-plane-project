@@ -17,7 +17,7 @@ from pathlib import Path
 
 from infrastructure.log.LogPort import LogPort
 from infrastructure.log.utils.logging_utils import *
-from infrastructure.log.utils.logging_utils import get_loglevel, FORMAT
+from infrastructure.log.utils.logging_utils import get_level, FORMAT
 from infrastructure.log.utils.pre_logging import INIT_LOG
 
 
@@ -31,7 +31,7 @@ class ConsoleLogAdapter(LogPort):
         Constructor.
         :param _log_level: Minimum level of log to be seen.
         """
-        self.log_level = get_loglevel(_log_level)
+        self.log_level = get_level(_log_level)
 
     def setup(self):
         """

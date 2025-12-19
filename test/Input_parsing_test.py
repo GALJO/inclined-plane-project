@@ -17,13 +17,13 @@ from math import sin, cos, pi
 
 from pytest.raises import raises
 
-from application.input.Input import Input, MSG_OUT_OF_BOUNDS
+from application.input.model.Input import Input, MSG_OUT_OF_BOUNDS
 from application.scalar.Scalar import Scalar
 from application.math_objects.Vector import Vector
-from infrastructure.config.Config import UNIT_TILT, UNIT_MASS, UNIT_VELOCITY, MATH_PRECISION
+from infrastructure.config.Config import UNIT_TILT, CONFIG.unit.mass, CONFIG.unit.velocity, MATH_PRECISION
 
 
-from application.exceptions import InputParsingError
+from application.input.exceptions import InputParsingError
 
 
 def test_parsing_tilt():
@@ -57,8 +57,8 @@ def test_parsing_tilt_out_of_bounds():
 
 def test_parsing_mass():
     # given
-    model = Scalar(10, UNIT_MASS)
-    model_comma = Scalar(20.5, UNIT_MASS)
+    model = Scalar(10, CONFIG.unit.mass)
+    model_comma = Scalar(20.5, CONFIG.unit.mass)
 
     # when
     mass = Input.parse_mass("10")
@@ -85,7 +85,7 @@ def test_parsing_velocity():
     # given
     value = 20
     angle = 0.7845
-    model = Vector.from_float(cos(angle) * value, sin(angle) * value, UNIT_VELOCITY)
+    model = Vector.from_float(cos(angle) * value, sin(angle) * value, CONFIG.unit.velocity)
 
     # when
     velocity = Input.parse_velocity(str(value), Scalar(angle))

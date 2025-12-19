@@ -19,7 +19,7 @@ from pymunk import Vec2d
 
 from application.math_objects.Scalar import Scalar
 from application.math_objects.Vector import translate_abs, Vector, translate
-from infrastructure.config.config import UNIT_TIME, UNIT_DISTANCE, UNIT_VELOCITY, SIM_SCALE
+from infrastructure.config.Config import CONFIG
 
 
 class Measurement:
@@ -52,17 +52,17 @@ class Measurement:
         _velocity: Vec2d
             Measured velocity of the block (Vec2d pymunk object)
         """
-        self.time = Scalar(_time, UNIT_TIME)
+        self.time = Scalar(_time, CONFIG.unit.time)
         x, y = translate_abs(_position.x, _position.y)
-        self.position = Vector.from_float(x, y, UNIT_DISTANCE)
+        self.position = Vector.from_float(x, y, CONFIG.unit.distance)
         x, y = translate(_velocity.x, _velocity.y)
-        self.velocity = Vector.from_float(x, y, UNIT_VELOCITY)
+        self.velocity = Vector.from_float(x, y, CONFIG.unit.velocity)
 
     def __str__(self):
         """
         Converts to string.
         """
-        return f"Measurement(time={self.time}, position={self.position}, velocity={self.velocity})"
+        return f"Measurement(time={self.time} position={self.position} velocity={self.velocity})"
 
 
 class Cycle:
@@ -99,7 +99,7 @@ class Cycle:
         self.end = _end_collision
 
     def __str__(self):
-        return f"Cycle(number={self.number}, start={self.start}, middle={self.middle}, end={self.end})"
+        return f"Cycle(number={self.number} start={self.start} middle={self.middle} end={self.end})"
 
 
 class Result:
@@ -162,10 +162,11 @@ class Result:
                    is_full,
                    cycle.middle.time - cycle.start.time,
                    cycle.end.time - cycle.middle.time if is_full else Scalar.nan(),
-                   Vector(abs(cycle.start.velocity.x / SIM_SCALE), abs(cycle.start.velocity.y / SIM_SCALE)),
-                   Vector(cycle.end.velocity.x / SIM_SCALE, cycle.end.velocity.y / SIM_SCALE),
-                   Vector(abs(cycle.start.position.x - cycle.middle.position.x) / SIM_SCALE,
-                          abs(cycle.start.position.y - cycle.middle.position.y) / SIM_SCALE))
+                   Vector(abs(cycle.start.velocity.x / CONFIG.scale),
+                          abs(cycle.start.velocity.y / CONFIG.scale)),
+                   Vector(cycle.end.velocity.x / CONFIG.scale, cycle.end.velocity.y / CONFIG.scale),
+                   Vector(abs(cycle.start.position.x - cycle.middle.position.x) / CONFIG.scale,
+                          abs(cycle.start.position.y - cycle.middle.position.y) / CONFIG.scale))
 
     @classmethod
     def model(cls, number: int, start_velocity: Vector, tilt: float, f: float, g: float, is_full: bool):
@@ -196,15 +197,16 @@ class Result:
         end_velocity_co = (2 * tan(tilt) - f) / (2 * (f + tan(tilt)))
 
         if not is_full:
-            end_velocity = Vector.from_float(0, 0, UNIT_VELOCITY)
+            end_velocity = Vector.from_float(0, 0, CONFIG.unit.velocity)
         else:
             end_velocity_co = v1 * sqrt(end_velocity_co)
-            end_velocity = Vector.from_float(-cos(tilt) * end_velocity_co, -sin(tilt) * end_velocity_co, UNIT_VELOCITY)
+            end_velocity = Vector.from_float(-cos(tilt) * end_velocity_co, -sin(tilt) * end_velocity_co,
+                                             CONFIG.unit.velocity)
 
-        d1 = Scalar(v1 / (g * (sin(tilt) + f * cos(tilt))), UNIT_TIME)
-        d2 = Scalar(end_velocity.value.value / (g * (sin(tilt) - f * cos(tilt))), UNIT_TIME)
+        d1 = Scalar(v1 / (g * (sin(tilt) + f * cos(tilt))), CONFIG.unit.time)
+        d2 = Scalar(end_velocity.value.value / (g * (sin(tilt) - f * cos(tilt))), CONFIG.unit.time)
 
-        reach = Vector.from_float(cos(tilt) * reach_value, sin(tilt) * reach_value, UNIT_DISTANCE)
+        reach = Vector.from_float(cos(tilt) * reach_value, sin(tilt) * reach_value, CONFIG.unit.distance)
 
         return cls(number, is_full, d1, d2 if is_full else Scalar.nan(), start_velocity, end_velocity, reach)
 
@@ -212,11 +214,11 @@ class Result:
         """
         Converts to string.
         """
-        return (f"Result(number={self.number}, "
-                f"is_full={self.is_full}, "
-                f"duration1={self.duration1}, "
-                f"duration2={self.duration2}), "
-                f"duration={self.duration}, "
-                f"start_velocity={self.start_velocity}, "
-                f"end_velocity={self.end_velocity}, "
+        return (f"Result(number={self.number} "
+                f"is_full={self.is_full} "
+                f"duration1={self.duration1} "
+                f"duration2={self.duration2} "
+                f"duration={self.duration} "
+                f"start_velocity={self.start_velocity} "
+                f"end_velocity={self.end_velocity} "
                 f"reach={self.reach})")

@@ -1,5 +1,6 @@
-output.csv
-test.txt
-config.yaml
-Pipfile.lock
+*.csv
+*.txt
+*.yaml
+*.log
 .idea
+Pipfile.lock

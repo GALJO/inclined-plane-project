@@ -15,6 +15,7 @@ permissions and limitations under the License.
 """
 import csv
 import logging
+import os
 from pathlib import Path
 
 from application.math_objects.Scalar import Scalar
@@ -23,6 +24,7 @@ from application.output.OutputPort import OutputPort
 from application.result.Error import Error, ScalarError, VectorError
 from application.result.Result import Result
 
+# TODO These constants should be in the Enum
 CYCLE_NUMBER = "cycle_number"
 IS_FULL = "is_full"
 DURATION1 = "duration1"
@@ -60,7 +62,8 @@ class CsvOutputAdapter(OutputPort):
         :param model: A list of model Result objects.
         :param error: A list of Error objects for given Result objects.
         """
-        logging.info(f"Sending results to CSV file: measured={measured} model={model} error={error}")
+        logging.info(f"Saving results to CSV file: measured={measured} model={model} error={error}")
+        os.makedirs(os.path.dirname(self.path.absolute()), exist_ok=True)
         with open(self.path.absolute(), "w", newline="") as output:
             writer = csv.DictWriter(output, fieldnames=get_dict(measured[0], model[0], error[0]).keys())
             writer.writeheader()
@@ -164,5 +167,5 @@ def get_dict(measured: Result, model: Result, error: Error) -> dict:
     result.update(model_dict)
     result.update(error_dict)
     result.update(get_any_dict(IS_FULL, model.is_full))
-    logging.debug(f"Created dict for data: dict={result} measured={measured} model={model} error={error}")
+    logging.debug(f"Created output row: dict={result} measured={measured} model={model} error={error}")
     return result

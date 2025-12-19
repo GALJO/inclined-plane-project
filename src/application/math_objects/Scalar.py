@@ -16,7 +16,7 @@ permissions and limitations under the License.
 import functools
 from math import nan
 
-from infrastructure.config.config import MATH_PRECISION
+from infrastructure.config.Config import CONFIG
 
 
 @functools.total_ordering
@@ -42,7 +42,7 @@ class Scalar:
         _unit: str
             Unit of the Scalar (default None).
         """
-        self.value = round(_value, MATH_PRECISION)
+        self.value = round(_value, CONFIG.math_precision)
         self.unit = _unit
 
     @classmethod
@@ -113,7 +113,7 @@ class Scalar:
         :param other: Operand (Scalar of number).
         """
         if is_number(other):
-            return self.value == round(other, MATH_PRECISION)
+            return self.value == round(other, CONFIG.math_precision)
         elif is_scalar(other):
             return self.value == other.value and self.unit == other.unit
         else:
@@ -125,7 +125,7 @@ class Scalar:
         :param other: Operand (Scalar of number).
         """
         if is_number(other):
-            return self.value < round(other, MATH_PRECISION)
+            return self.value < round(other, CONFIG.math_precision)
         elif is_scalar(other):
             return self.value < other.value
         else:

@@ -13,6 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
+import logging
 import sys
 from math import sin, cos, tan, radians
 from pathlib import Path
@@ -22,19 +23,18 @@ import pygame
 import pymunk.pygame_util
 from pymunk import Arbiter, Space, Vec2d, Body
 
-from application.exceptions import InputParsingError
-from application.input.Input import Input
+from application.input.exceptions import InputParsingError
+from application.input.model.Input import Input
 from application.math_objects.Vector import *
 from application.result.Error import Error
 from application.result.Result import Measurement, Cycle, Result
 from infrastructure.AppPorts import AppPorts
-from infrastructure.config.config import *
-from infrastructure.config.set_config import Config
+from infrastructure.config.Config import CONFIG
 from infrastructure.log.utils.pre_logging import init_pre_logging
 from infrastructure.print_banner import print_banner
 
 VERSION = "1.0 BETA"
-CONFIG_PATH = "./config.yaml"
+CONFIG_PATH = Path("./config.yaml")
 
 
 def init_space(inp: Input) -> tuple[Space, Body]:
@@ -46,7 +46,7 @@ def init_space(inp: Input) -> tuple[Space, Body]:
     """
     logging.info(f"Initializing simulation space: input={inp}")
     space = pymunk.Space()
-    space.gravity = (0, G * SIM_SCALE)
+    space.gravity = (0, CONFIG.g * CONFIG.scale)
 
     plane = pymunk.Segment(space.static_body, translate_abs(50, 0),
                            translate_abs(10000, tan(inp.tilt.value) * 10000), 4)
@@ -71,13 +71,13 @@ def init_space(inp: Input) -> tuple[Space, Body]:
 
     block_body = pymunk.Body(mass=inp.mass.value,
                              moment=pymunk.moment_for_box(sys.float_info.max,
-                                                          (SIM_BLOCK_SIZE, SIM_BLOCK_SIZE)))
+                                                          (CONFIG.block_size, CONFIG.block_size)))
     block_body.angle = radians(270) - inp.tilt.value
     block_body.position = translate_abs(100 - 50 * sin(inp.tilt.value) ** 2,
                                         50 * sin(inp.tilt.value) * cos(inp.tilt.value))
 
-    block = pymunk.Poly(block_body, [(0, 0), (0, SIM_BLOCK_SIZE),
-                                     (SIM_BLOCK_SIZE, 0), (SIM_BLOCK_SIZE, SIM_BLOCK_SIZE)])
+    block = pymunk.Poly(block_body, [(0, 0), (0, CONFIG.block_size),
+                                     (CONFIG.block_size, 0), (CONFIG.block_size, CONFIG.block_size)])
     block.elasticity = 1
     block.friction = inp.friction.value
     block.collision_type = 1
@@ -120,10 +120,10 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
     second one with detected block stop events - and duration of simulation.
     Second list also contains measures taken at start and end of the simulation.
     """
-    display = pygame.display.set_mode(SIM_RESOLUTION)
+    display = pygame.display.set_mode(CONFIG.resolution)
     draw_options = pymunk.pygame_util.DrawOptions(display)
     clock = pygame.time.Clock()
-    logging.debug(f"Set up pygame display: resolution={SIM_RESOLUTION} fps={SIM_FPS}")
+    logging.debug(f"Set up pygame display: resolution={CONFIG.resolution} fps={CONFIG.fps}")
 
     vel = inp.velocity.translated()
     block.apply_impulse_at_world_point((vel.x.value * inp.mass.value, vel.y.value * inp.mass.value),
@@ -143,7 +143,7 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
 
     pygame.init()
 
-    start_time = Scalar(round(time(), 2), UNIT_TIME)
+    start_time = Scalar(round(time(), 2), CONFIG.unit.time)
     start_measurement = Measurement(start_time.value, block.position, block.velocity)
     logging.info("Running simulation: "
                  f"start_time={start_time} "
@@ -159,25 +159,25 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
         if (not is_full and len(stop_events) > 10) or (is_full and len(collision_events) > model_cycles_amount):
             running = False
 
-        if abs(block.velocity[0]) < (MEASURE_PRECISION * SIM_SCALE) and abs(block.velocity[1]) < (
-                MEASURE_PRECISION * SIM_SCALE):
+        if abs(block.velocity[0]) < (CONFIG.measure_precision * CONFIG.scale) and abs(block.velocity[1]) < (
+                CONFIG.measure_precision * CONFIG.scale):
             stop_events.append(Measurement(curr_time, block.position, block.velocity))
             logging.debug(f"Block stop detected: measurement={stop_events[-1]}")
 
         display.fill((65, 65, 65))
         space.debug_draw(draw_options)
         pygame.display.update()
-        clock.tick(SIM_FPS)
-        space.step(1 / SIM_FPS)
+        clock.tick(CONFIG.fps)
+        space.step(1 / CONFIG.fps)
     pygame.quit()
 
-    end_time = Scalar(round(time(), 2), UNIT_TIME)
+    end_time = Scalar(round(time(), 2), CONFIG.unit.time)
     end_measurement = Measurement(end_time.value, block.position, block.velocity)
     logging.info(f"Simulation finished: "
                  f"duration={end_time - start_time} "
                  f"end_time={end_time} "
                  f"end_measurement={end_measurement} "
-                 f"wall-block collisions n={len(collision_events)}"
+                 f"wall-block collisions n={len(collision_events)} "
                  f"block stops n={len(stop_events)}")
 
     collision_events.insert(0, start_measurement)
@@ -256,36 +256,36 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
                             user_input.velocity,
                             user_input.tilt.value,
                             user_input.friction.value,
-                            G,
+                            CONFIG.g,
                             False)]
     if (user_input.friction * cos(user_input.tilt.value)) / (sin(user_input.tilt.value)) >= 1:
-        logging.debug(f"Not full cycle detected! result={results[0]}")
-        logging.debug(f"Calculated model: N={len(results)} results={results}")
+        logging.info(f"Not full cycle occurred. result={results[0]}")
+        logging.info(f"Calculated model: n={len(results)}")
 
     results = [Result.model(0,
                             user_input.velocity,
                             user_input.tilt.value,
                             user_input.friction.value,
-                            G,
+                            CONFIG.g,
                             True)]
     logging.debug(f"Calculated model result: n={0} result={results[-1]}")
     i = 1
-    while results[-1].end_velocity.value > MEASURE_PRECISION:
+    while results[-1].end_velocity.value > CONFIG.measure_precision:
         results.append(Result.model(i,
                                     results[-1].end_velocity,
                                     user_input.tilt.value,
                                     user_input.friction.value,
-                                    G,
+                                    CONFIG.g,
                                     True))
         logging.debug(f"Calculated model result: n={i} result={results[-1]}")
         i += 1
 
-    logging.info(f"Calculated model: N={len(results)} results={results}")
+    logging.info(f"Calculated model: n={len(results)}")
     return results
 
 
 def handle_error(e: InputParsingError) -> None:
-    print(f"Wrong {e.field.name} field given: {e.desc} ({e.code})")
+    print(f"Wrong {e.field.name} field given: {e.desc} ({e.code}). Try again.")
 
 
 def read_console() -> Input:
@@ -316,7 +316,8 @@ def read_console() -> Input:
 
 def main():
     init_pre_logging()
-    Config(Path(CONFIG_PATH)).set()
+    CONFIG.update(CONFIG_PATH)
+
     ports = AppPorts()
     ports.log_port.setup()
 

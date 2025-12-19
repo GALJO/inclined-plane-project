@@ -16,10 +16,12 @@ permissions and limitations under the License.
 import logging
 from pathlib import Path
 
+BANNER = Path("BANNER")
+NOTICE = Path("NOTICE")
 
 def print_banner(version: str):
-    banner = open(Path(__file__).parent.parent.parent.joinpath("BANNER"), "r").read()
-    notice = open(Path(__file__).parent.parent.parent.joinpath("NOTICE"), "r").read()
+    banner = open(BANNER, "r").read()
+    notice = open(NOTICE, "r").read()
 
     logging.info("\n" + notice + "\n" + banner.format(version))
     print("\n" + notice + "\n" + banner.format(version))

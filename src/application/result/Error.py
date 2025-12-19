@@ -43,7 +43,7 @@ class ScalarError:
         self.rel = self.abs / x if x != 0 else Scalar.nan()
 
     def __str__(self):
-        return f"ScalarError(abs={self.abs}, rel={self.rel})"
+        return f"ScalarError(abs={self.abs} rel={self.rel})"
 
 
 class VectorError:
@@ -74,7 +74,7 @@ class VectorError:
         self.value = ScalarError(vec.value, vec0.value)
 
     def __str__(self):
-        return f"VectorError(x={self.x}, y={self.y}, value={self.value})"
+        return f"VectorError(x={self.x} y={self.y} value={self.value})"
 
 
 class Error:
@@ -117,9 +117,9 @@ class Error:
         """
         Converts to string.
         """
-        return (f"Error(duration={self.duration}, "
-                f"duration1={self.duration1}, "
-                f"duration2={self.duration2}, "
-                f"start_velocity={self.start_velocity}, "
-                f"end_velocity={self.end_velocity},"
+        return (f"Error(duration={self.duration} "
+                f"duration1={self.duration1} "
+                f"duration2={self.duration2} "
+                f"start_velocity={self.start_velocity} "
+                f"end_velocity={self.end_velocity} "
                 f"reach={self.reach})")
