@@ -16,7 +16,6 @@ permissions and limitations under the License.
 import logging
 import sys
 from math import sin, cos, tan, radians
-from pathlib import Path
 from time import time
 
 import pygame
@@ -24,18 +23,17 @@ import pymunk.pygame_util
 from pymunk import Arbiter, Space, Vec2d, Body
 
 from application.input.exceptions import InputParsingError
-from application.input.model.Input import Input
-from application.math_objects.Vector import *
-from application.result.Error import Error
-from application.result.Result import Measurement, Cycle, Result
-from infrastructure.AppPorts import AppPorts
+from application.input.model.input import Input
+from application.math.math_util import translate_abs
+from application.math.vector import *
+from application.result.error import Error
+from application.result.result import Measurement, Cycle, Result
+from infrastructure.app_ports import AppPorts
 from infrastructure.catcher import catcher
-from infrastructure.config.Config import CONFIG
+from infrastructure.config.config import CONFIG
+from infrastructure.config.init_config import INIT_CONFIG
 from infrastructure.log.utils.pre_logging import init_pre_logging
 from infrastructure.print_banner import print_banner
-
-VERSION = "1.0 BETA"
-CONFIG_PATH = Path("./config/config.yaml")
 
 
 def init_space(inp: Input) -> tuple[Space, Body]:
@@ -122,6 +120,7 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
     Second list also contains measures taken at start and end of the simulation.
     """
     display = pygame.display.set_mode(CONFIG.resolution)
+    pygame.display.set_caption("InclinedPlane -- SIMULATION")
     draw_options = pymunk.pygame_util.DrawOptions(display)
     clock = pygame.time.Clock()
     logging.debug(f"Set up pygame display: resolution={CONFIG.resolution} fps={CONFIG.fps}")
@@ -318,12 +317,12 @@ def read_console() -> Input:
 @catcher
 def main():
     init_pre_logging()
-    CONFIG.update(CONFIG_PATH)
+    CONFIG.update(INIT_CONFIG.config_path)
 
     ports = AppPorts()
     ports.log_port.setup()
 
-    print_banner(VERSION)
+    print_banner(INIT_CONFIG.version)
 
     user_input = read_console()
     simulation_input = Input.simulation(user_input)

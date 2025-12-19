@@ -16,19 +16,18 @@ permissions and limitations under the License.
 import logging
 import os.path
 from logging import DEBUG
-from pathlib import Path
 
-from infrastructure.log.utils.logging_utils import FORMAT
-
-INIT_LOG = Path("./log/init.log")
+from infrastructure.config.init_config import INIT_CONFIG
+from infrastructure.log.utils.get_level import FORMAT
 
 
 def init_pre_logging() -> None:
-    os.makedirs(os.path.dirname(INIT_LOG.absolute()), exist_ok=True)
-    ch = logging.FileHandler(INIT_LOG.absolute(), "w")
+    os.makedirs(os.path.dirname(INIT_CONFIG.prelog_path.absolute()), exist_ok=True)
+    ch = logging.FileHandler(INIT_CONFIG.prelog_path.absolute(), "w")
     ch.setLevel(DEBUG)
     ch.setFormatter(logging.Formatter(FORMAT))
     logger = logging.getLogger()
     logger.setLevel(DEBUG)
+    logger.handlers.clear()
     logger.addHandler(ch)
-    logging.warning(f"Pre-setup log activated: log_file={INIT_LOG.absolute()}")
+    logging.warning(f"Pre-setup log activated: log_file={INIT_CONFIG.prelog_path.absolute()}")
