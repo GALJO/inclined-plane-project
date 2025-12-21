@@ -26,6 +26,7 @@ from infrastructure.config.unit_config import UnitConfig
 
 
 class Config:
+    """ """
     def __init__(self, math_precision: int,
                  measure_precision: float,
                  log_port: str,
@@ -57,6 +58,7 @@ class Config:
 
     @classmethod
     def default(cls):
+        """ """
         math_precision = 10
         inp: InputConfig = InputConfig("CONSOLE",
                                        0,
@@ -86,6 +88,11 @@ class Config:
         return config
 
     def generate_file(self, path: Path) -> None:
+        """
+
+        :param path: Path: 
+
+        """
         logging.debug(f"Generating a default config file: path={path}")
         struct = {}
         struct.setdefault(ConfigName.log.value, {})
@@ -124,6 +131,11 @@ class Config:
         logging.debug(f"Generated a default config file: insides={struct}")
 
     def update(self, path: Path):
+        """
+
+        :param path: Path: 
+
+        """
         logging.info(f"Loading the config from a file: path={path.absolute()}")
         if not path.exists():
             logging.warning(f"A config file does not exists; generating a new one: path={path.absolute()}")
@@ -157,6 +169,12 @@ class Config:
 
 
 def get_value(config: dict, *names: ConfigName):
+    """
+
+    :param config: dict: 
+    :param *names: ConfigName: 
+
+    """
     value = config
     log_name = ""
     for name in names:

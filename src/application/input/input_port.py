@@ -13,23 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-import logging
+from abc import ABC, abstractmethod
 
-FORMAT = "[%(asctime)s] [%(levelname)s] || [%(funcName)s] %(filename)s :: %(message)s"
+from application.input.model.input import Input
 
 
-def get_level(level: str):
-    match level:
-        case "DEBUG":
-            return logging.DEBUG
-        case "INFO":
-            return logging.INFO
-        case "WARN":
-            return logging.WARN
-        case "ERROR":
-            return logging.ERROR
-        case "CRITICAL":
-            return logging.CRITICAL
-        case _:
-            logging.critical("EXIT -- unknown log level.")
-            exit(1)
+class InputPort(ABC):
+    """Abstract port responsible for reading input."""
+
+    @abstractmethod
+    def get_input(self) -> Input:
+        """Reads and parses input from user."""
+        pass

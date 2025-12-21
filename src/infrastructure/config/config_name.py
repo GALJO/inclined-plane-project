@@ -17,6 +17,7 @@ from enum import Enum
 
 
 class ConfigName(Enum):
+    """ """
     port = "port"
     path = "path"
 

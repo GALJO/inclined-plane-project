@@ -20,9 +20,10 @@ from application.math.scalar import Scalar
 
 
 class Vector:
-    """
-    A class representing a mathematical vector object.
+    """A class representing a mathematical vector object.
     Unit of the vector is unit of x, y and value attributes. They should be the same.
+
+
     Attributes
     ----------
     x : Scalar
@@ -49,37 +50,40 @@ class Vector:
 
     @classmethod
     def from_float(cls, _x: float, _y: float, _unit: str):
-        """
-        Creates Vector instance from float coordinates.
-        Parameters
-        ----------
-        _x: float
-            Vector x coordinate.
-        _y: float
-            Vector y coordinate.
-        _unit: str
-            Unit of the vector.
-        Returns
-        -------
-        vector: Vector
-            Vector object.
+        """Creates Vector instance from float coordinates.
+
+        :param _x: Vector x coordinate.
+        :type _x: float
+        :param _y: Vector y coordinate.
+        :type _y: float
+        :param _unit: 
+        :type _unit: str
+        :param _x: float: 
+        :param _y: float: 
+        :param _unit: str: 
+
+        
         """
         return cls(Scalar(_x, _unit), Scalar(_y, _unit))
 
     def translated(self):
-        """
-        Relatively translates vector in coordinate system starting in bottom-left screen corner
+        """Relatively translates vector in coordinate system starting in bottom-left screen corner
         to point in pygame coordinate system and vice versa. Vector changes sense, direction and value.
+
+
         :returns: Translated Vector.
+
         """
         x, y = translate(self.x, self.y)
         return Vector(x, y)
 
     def translated_abs(self):
-        """
-        Absolutely translates vector in coordinate system starting in bottom-left screen corner
+        """Absolutely translates vector in coordinate system starting in bottom-left screen corner
         to point in pygame coordinate system and vice versa. Vector changes only sense and direction.
+
+
         :returns: Translated Vector.
+
         """
         x, y = translate_abs(self.x, self.y)
         return Vector(x, y)

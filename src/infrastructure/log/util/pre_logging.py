@@ -17,11 +17,13 @@ import logging
 import os.path
 from logging import DEBUG
 
+from infrastructure.log.util.get_level import FORMAT
+
 from infrastructure.config.init_config import INIT_CONFIG
-from infrastructure.log.utils.get_level import FORMAT
 
 
 def init_pre_logging() -> None:
+    """ """
     os.makedirs(os.path.dirname(INIT_CONFIG.prelog_path.absolute()), exist_ok=True)
     ch = logging.FileHandler(INIT_CONFIG.prelog_path.absolute(), "w")
     ch.setLevel(DEBUG)

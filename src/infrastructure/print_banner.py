@@ -20,6 +20,11 @@ BANNER = Path("BANNER")
 NOTICE = Path("NOTICE")
 
 def print_banner(version: str):
+    """
+
+    :param version: str: 
+
+    """
     banner = open(BANNER, "r").read()
     notice = open(NOTICE, "r").read()
 

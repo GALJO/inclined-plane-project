@@ -13,21 +13,28 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-from application.input.model.input_field import InputField
+import logging
+
+FORMAT = "[%(asctime)s] [%(levelname)s] || [%(funcName)s] %(filename)s :: %(message)s"
 
 
-class InputParsingError(Exception):
-    """Exception raised when the input cannot be parsed due to wrong data given by the user.
-    Attributes:
-        desc: str: Description of the exception.
-        field: InputField: Field that exception refers to.
+def get_level(level: str):
     """
-    CODE = "IPE"
 
-    def __init__(self, _desc: str, field: InputField | None):
-        self.desc = _desc
-        self.field = field
+    :param level: str: 
 
-    @classmethod
-    def no_field(cls, _desc: str):
-        return cls(_desc, None)
+    """
+    match level:
+        case "DEBUG":
+            return logging.DEBUG
+        case "INFO":
+            return logging.INFO
+        case "WARN":
+            return logging.WARN
+        case "ERROR":
+            return logging.ERROR
+        case "CRITICAL":
+            return logging.CRITICAL
+        case _:
+            logging.critical("EXIT -- unknown log level.")
+            exit(1)

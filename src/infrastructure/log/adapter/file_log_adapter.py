@@ -17,15 +17,14 @@ import logging
 import os
 from pathlib import Path
 
+from infrastructure.log.util.get_level import get_level, FORMAT
+
 from infrastructure.config.init_config import INIT_CONFIG
 from infrastructure.log.log_port import LogPort
-from infrastructure.log.utils.get_level import get_level, FORMAT
 
 
 class FileLogAdapter(LogPort):
-    """
-    LoggingPort adapter for logging to file.
-    """
+    """LoggingPort adapter for logging to file."""
 
     def __init__(self, _level: str, _path: Path):
         """
@@ -37,9 +36,7 @@ class FileLogAdapter(LogPort):
         self.log_path = _path
 
     def setup(self):
-        """
-        Activate logging to file.
-        """
+        """Activate logging to file."""
         logging.warning(f"Pre-setup log end. From now on logging to file: log_file={self.log_path.absolute()}")
         logger = logging.getLogger()
         logger.handlers.clear()

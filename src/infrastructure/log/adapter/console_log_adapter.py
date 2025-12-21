@@ -13,16 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
+from infrastructure.log.util.get_level import *
+from infrastructure.log.util.get_level import get_level, FORMAT
+
 from infrastructure.config.init_config import INIT_CONFIG
 from infrastructure.log.log_port import LogPort
-from infrastructure.log.utils.get_level import *
-from infrastructure.log.utils.get_level import get_level, FORMAT
 
 
 class ConsoleLogAdapter(LogPort):
-    """
-    Logging adapter for console logging.
-    """
+    """Logging adapter for console logging."""
 
     def __init__(self, _log_level: str):
         """
@@ -32,9 +31,7 @@ class ConsoleLogAdapter(LogPort):
         self.log_level = get_level(_log_level)
 
     def setup(self):
-        """
-        Activate logging to console.
-        """
+        """Activate logging to console."""
         logging.warning(f"Pre-setup log end. From now on logging to console.")
         logger = logging.getLogger()
         logger.handlers.clear()
@@ -49,11 +46,14 @@ class ConsoleLogAdapter(LogPort):
 
 
 class ConsoleFormatter(logging.Formatter):
-    """
-    Custom formatter for console logging.
-    """
+    """Custom formatter for console logging."""
 
     def format(self, record: logging.LogRecord):
+        """
+
+        :param record: logging.LogRecord: 
+
+        """
         white = '\033[97m'
         bold = '\033[91m'
         grey = '\033[37m'

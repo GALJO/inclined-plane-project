@@ -22,9 +22,7 @@ import pygame
 import pymunk.pygame_util
 from pymunk import Arbiter, Space, Vec2d, Body
 
-from application.input.exceptions import InputParsingError
 from application.input.model.input import Input
-from application.math.math_util import translate_abs
 from application.math.vector import *
 from application.result.error import Error
 from application.result.result import Measurement, Cycle, Result
@@ -32,16 +30,17 @@ from infrastructure.app_ports import AppPorts
 from infrastructure.catcher import catcher
 from infrastructure.config.config import CONFIG
 from infrastructure.config.init_config import INIT_CONFIG
-from infrastructure.log.utils.pre_logging import init_pre_logging
+from infrastructure.log.util.pre_logging import init_pre_logging
 from infrastructure.print_banner import print_banner
 
 
 def init_space(inp: Input) -> tuple[Space, Body]:
-    """
-    Function initializes Pymunk Space object for simulation.
-    :param inp: Input data.
-    :returns: Set up Space object and Body object of block.
+    """Function initializes the simulation's space.
+
+    :param inp: Input: The user's input.
+    :returns: Pymunk space and the point's body.
     :rtype: tuple[Space, Body]
+
     """
     logging.info(f"Initializing simulation space: input={inp}")
     space = pymunk.Space()
@@ -95,11 +94,12 @@ def init_space(inp: Input) -> tuple[Space, Body]:
 
 
 def handle_collision(arbiter: Arbiter, space: Space, data: list[Measurement]) -> None:
-    """
-    Handler of block-wall collision. Saves the Measurement object and logs the collision.
-    :param arbiter: Pymunk Arbiter - collision data object.
-    :param space: Pymunk Space object.
-    :param data: List of Measurements (one of results of simulation).
+    """Handles the collision event.
+
+    :param arbiter: Arbiter: Collision data object.
+    :param space: Space: Pymunk space.
+    :param data: list[Measurement]: List to append Measurement from collision.
+
     """
     data.append(Measurement(round(time(), 2), arbiter.shapes[1].body.position, arbiter.shapes[1].body.velocity))
     logging.debug(f"Block-wall collision detected: measurement={data[-1]}")
@@ -107,17 +107,19 @@ def handle_collision(arbiter: Arbiter, space: Space, data: list[Measurement]) ->
 
 def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is_full: bool) -> \
         tuple[list[Measurement], list[Measurement], Scalar]:
-    """
-    Simulates the scenario for given data using Pymunk physics engine.
-    :param space: Pymunk Space object.
-    :param block: Pymunk Body object of block.
-    :param inp: Input data.
-    :param model_cycles_amount: Expected amount of cycles based on model results.
-    :param is_full: True if cycle is full in model results.
-    Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
-    :return: Two lists of Measurement objects - first one with detected wall-block collision events,
-    second one with detected block stop events - and duration of simulation.
-    Second list also contains measures taken at start and end of the simulation.
+    """Simulates the scenario for given data in physics engine.
+
+    Simulation cycle: Look up the Cycle object docstring.
+
+    Simulation events: Look up the Measurement object docstring.
+
+    :param space: Space: The simulation's space.
+    :param block: Body: The point's body.
+    :param inp: Input: The user's input.
+    :param model_cycles_amount: int: Expected amount of cycles based on model results.
+    :param is_full: bool: Is cycle full in model results?
+    :returns: A list of Measurements from the collision events, a list of Measurements from the stop events, elapsed duration of the simulation.
+    :rtype: tuple[list[Measurement], list[Measurement], Scalar]
     """
     display = pygame.display.set_mode(CONFIG.resolution)
     pygame.display.set_caption("InclinedPlane -- SIMULATION")
@@ -186,13 +188,15 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
     return collision_events, stop_events, end_time - start_time
 
 
-def collect_cycles(stop_events: list[Measurement], collision_events: list[Measurement]) -> list[Cycle]:
-    """
-    Parses measurements from simulation and converts them to list of Cycle objects.
-    :param stop_events: Measurements of block stop events from simulation.
-    :param collision_events: Measurements of block-wall collision events from simulation.
-    :return: List of Cycle objects based on simulation events.
+def collect_cycles(stop_events: list[Measurement], collision_events: list[Measurement], is_full: bool) -> list[Cycle]:
+    """Parses simulation's results to simulation's Cycles.
+
+    :param stop_events: list[Measurement]: Stop events measurements.
+    :param collision_events: list[Measurement]: Collision events measurements.
+    :param is_full: bool: Is cycle full?
+    :returns: Simulation's cycles.
     :rtype: list[Cycle]
+
     """
     logging.debug(f"Collecting cycles.")
     cycles = []
@@ -208,7 +212,7 @@ def collect_cycles(stop_events: list[Measurement], collision_events: list[Measur
                 event = stop_events[measurement_ndx]
             measurement_ndx += 1
         if event.time != -1:
-            cycles.append(Cycle(cycle_i, start, event, end))
+            cycles.append(Cycle(cycle_i, start, event, end, is_full))
             logging.debug(f"Collected cycle: cycle={cycles[-1]}")
             cycle_i += 1
     logging.info(f"Collected cycles: n={len(cycles)}")
@@ -217,25 +221,33 @@ def collect_cycles(stop_events: list[Measurement], collision_events: list[Measur
 
 def prepare_results(stop_events: list[Measurement], collision_events: list[Measurement], is_full: bool) \
         -> list[Result]:
-    """
-    Parses measurements from simulation, divides them to cycles and prepares results.
-    :param stop_events: Measurements of block stop events from simulation.
-    :param collision_events: Measurements of block-wall collision events from simulation.
-    :param is_full: True if cycle is full.
-    Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
-    :return: List with Result object for each cycle.
+    """Parses simulation's measurements into readable results.
+
+    :param stop_events: list[Measurement]: Stop events measurements.
+    :param collision_events: list[Measurement]: Collision events measurements.
+    :param is_full: bool: Is cycle full?
+    :returns: List of results.
+    :rtype: list[Result]
+
     """
     logging.info(f"Preparing simulation results: is_full={is_full}")
     results = []
-    cycles = collect_cycles(stop_events, collision_events)
+    cycles = collect_cycles(stop_events, collision_events, is_full)
     for cycle in cycles:
-        results.append(Result.measured(cycle, is_full))
+        results.append(Result.measured(cycle))
         logging.debug(f"Prepared result: result={results[-1]} cycle={cycle}")
     logging.info(f"Prepared simulation results: n={len(results)}")
     return results
 
 
 def prepare_errors(measured: list[Result], model: list[Result]) -> list[Error]:
+    """Prepares Error objects based on results.
+
+    :param measured: list[Result]: Simulated results.
+    :param model: list[Result]: Model results.
+    :returns: List of errors.
+    :rtype: list[Error]
+    """
     logging.debug(f"Preparing errors.")
     errors = []
     for i in range(0, len(model)):
@@ -245,27 +257,28 @@ def prepare_errors(measured: list[Result], model: list[Result]) -> list[Error]:
     return errors
 
 
-def calculate_theoretical_model(user_input: Input) -> list[Result]:
+def calculate_theoretical_model(inp: Input) -> list[Result]:
+    """Prepares model results based on physics formulas.
+
+    :param inp: Input: The user's input.
+    :returns: Results.
+    :rtype: list[Result]
     """
-    Prepares model results based on physics formulas.
-    :param user_input: Input data.
-    :return: List with Result object for each cycle.
-    """
-    logging.info(f"Calculating model: input={user_input}")
+    logging.info(f"Calculating model: input={inp}")
     results = [Result.model(0,
-                            user_input.velocity,
-                            user_input.tilt.value,
-                            user_input.friction.value,
+                            inp.velocity,
+                            inp.tilt.value,
+                            inp.friction.value,
                             CONFIG.g,
                             False)]
-    if (user_input.friction * cos(user_input.tilt.value)) / (sin(user_input.tilt.value)) >= 1:
+    if (inp.friction * cos(inp.tilt.value)) / (sin(inp.tilt.value)) >= 1:
         logging.info(f"Not full cycle occurred. result={results[0]}")
         logging.info(f"Calculated model: n={len(results)}")
 
     results = [Result.model(0,
-                            user_input.velocity,
-                            user_input.tilt.value,
-                            user_input.friction.value,
+                            inp.velocity,
+                            inp.tilt.value,
+                            inp.friction.value,
                             CONFIG.g,
                             True)]
     logging.debug(f"Calculated model result: n={0} result={results[-1]}")
@@ -273,8 +286,8 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
     while results[-1].end_velocity.value > CONFIG.measure_precision:
         results.append(Result.model(i,
                                     results[-1].end_velocity,
-                                    user_input.tilt.value,
-                                    user_input.friction.value,
+                                    inp.tilt.value,
+                                    inp.friction.value,
                                     CONFIG.g,
                                     True))
         logging.debug(f"Calculated model result: n={i} result={results[-1]}")
@@ -284,58 +297,31 @@ def calculate_theoretical_model(user_input: Input) -> list[Result]:
     return results
 
 
-def handle_error(e: InputParsingError) -> None:
-    print(f"Wrong {e.field.name} field given: {e.desc} ({e.code}). Try again.")
-
-
-def read_console() -> Input:
-    """
-    Reads user's input from console.
-    :returns: User Input.
-    """
-    i = 0
-    while True:
-        logging.info(f"Reading input: trial nr {i}")
-        angle = input("Tilt of plane (rad) (0, 0.5pi) = ")
-        logging.debug(f"Received input: angle={angle}")
-        friction = input("Friction coefficient (Coulomb friction) (0, inf) = ")
-        logging.debug(f"Received input: friction={friction}")
-        mass = input("Block's mass (kg) (0, inf) = ")
-        logging.debug(f"Received input: mass={mass}")
-        velocity = input("Starting velocity (m/s) (parallel to slope) (0, inf) = ")
-        logging.debug(f"Received input: velocity={velocity}")
-        try:
-            inp = Input.user(angle, mass, velocity, friction)
-            logging.info(f"Successfully read input after {i + 1} trial(s): input={inp}")
-            return inp
-        except InputParsingError as e:
-            logging.error(f"Error while reading user's input - retrying to get input: e={e}")
-            handle_error(e)
-            i += 1
-
-
 @catcher
 def main():
+    # Initialization
     init_pre_logging()
     CONFIG.update(INIT_CONFIG.config_path)
-
     ports = AppPorts()
-    ports.log_port.setup()
-
+    ports.log.setup()
     print_banner(INIT_CONFIG.version)
 
-    user_input = read_console()
+    # Reading input
+    user_input = ports.input.get_input()
     simulation_input = Input.simulation(user_input)
 
+    # Calculating model
     model = calculate_theoretical_model(user_input)
     is_full = model[0].is_full
 
+    # Simulation
     space, block = init_space(simulation_input)
     collisions, measurements, sim_duration = simulate(space, block, simulation_input, len(model), is_full)
+
+    # Preparing & sending results
     measured = prepare_results(measurements, collisions, is_full)
     errors = prepare_errors(measured, model)
-
-    ports.output_port.send_output(measured, model, errors)
+    ports.output.send_output(measured, model, errors)
 
 
 main()

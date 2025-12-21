@@ -20,15 +20,17 @@ from application.result.result import Result
 
 
 class OutputPort(ABC):
-    """
-    Abstract class that is responsible for output.
-    """
+    """Abstract class that is responsible for output."""
     @abstractmethod
     def send_output(self, measured: list[Result], model: list[Result], error: list[Error]) -> None:
-        """
-        Function that parses output from data and sends it to final location.
+        """Function that parses output from data and sends it to final location.
+
         :param measured: List of measured Result objects.
         :param model: List of model Result objects.
         :param error: List of Error objects for each Result object.
+        :param measured: list[Result]: 
+        :param model: list[Result]: 
+        :param error: list[Error]: 
+
         """
         pass

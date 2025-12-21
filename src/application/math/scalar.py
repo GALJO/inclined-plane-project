@@ -21,15 +21,7 @@ from infrastructure.config.config import CONFIG
 
 @functools.total_ordering
 class Scalar:
-    """
-    A class defining scalar value.
-    Attributes
-    ----------
-    value : float
-        Numeric value of scalar. It is defined as 0 if value absolute is lower or equal to D constant value.
-    unit : str | None
-        Unit of scalar (can be None).
-    """
+    """A class defining scalar value."""
 
     def __init__(self, _value: float, _unit: str | None = None):
         """
@@ -47,9 +39,11 @@ class Scalar:
 
     @classmethod
     def nan(cls):
-        """
-        Creates nan (not a number) scalar.
-        :returns: "Nan" scalar (no unit).
+        """Creates nan (not a number) scalar.
+
+
+        :returns: Nan" scalar (no unit).
+
         """
         return Scalar(nan)
 
@@ -136,10 +130,11 @@ class Scalar:
 
 
 def is_number(o) -> bool:
-    """
-    Checks if operand is a number.
+    """Checks if operand is a number.
+
     :param o: Operand.
     :returns: True if o is number, False otherwise.
+
     """
     if type(o) == int or type(o) == float:
         return True
@@ -147,10 +142,11 @@ def is_number(o) -> bool:
 
 
 def is_scalar(o):
-    """
-    Checks if operand is a Scalar.
+    """Checks if operand is a Scalar.
+
     :param o: Operand.
     :returns: True if o is Scalar, False otherwise.
+
     """
     if hasattr(o, "value") and hasattr(o, "unit"):
         return True

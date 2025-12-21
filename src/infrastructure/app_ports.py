@@ -15,6 +15,7 @@ permissions and limitations under the License.
 """
 import logging
 
+from application.input.adapter.console_input_adapter import ConsoleInputAdapter
 from application.output.adapter.csv.csv_output_adapter import CsvOutputAdapter
 from infrastructure.config.config import CONFIG
 from infrastructure.log.adapter.console_log_adapter import ConsoleLogAdapter
@@ -22,12 +23,16 @@ from infrastructure.log.adapter.file_log_adapter import FileLogAdapter
 
 
 class AppPorts:
+    """Contains every abstract."""
+
     def __init__(self):
-        self.log_port = configure_log_port()
-        self.output_port = configure_output_port()
+        self.log = configure_log_port()
+        self.input = configures_input_port()
+        self.output = configure_output_port()
 
 
 def configure_log_port():
+    """Configures log abstract."""
     match CONFIG.log_port:
         case "CONSOLE":
             logging.info("Chosen log configuration: CONSOLE")
@@ -43,7 +48,19 @@ def configure_log_port():
             exit(1)
 
 
+def configures_input_port():
+    """Configures input abstract."""
+    match CONFIG.input.port:
+        case "CONSOLE":
+            logging.info("Chosen input configuration: CONSOLE")
+            return ConsoleInputAdapter()
+        case _:
+            logging.critical("INIT FAIL -- unknown input.port config.")
+            exit(1)
+
+
 def configure_output_port():
+    """Configures output abstract."""
     match CONFIG.output_port:
         case "CSV":
             logging.info("Chosen output configuration: CSV")

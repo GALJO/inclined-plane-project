@@ -17,7 +17,13 @@ import logging
 
 
 def catcher(f):
+    """
+
+    :param f: 
+
+    """
     def wrap():
+        """ """
         try:
             logging.debug("The Catcher: awaiting disturbance.")
             f()

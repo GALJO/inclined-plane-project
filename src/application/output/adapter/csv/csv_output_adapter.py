@@ -43,23 +43,21 @@ SUFFIX_Y = "_y"
 
 
 class CsvOutputAdapter(OutputPort):
-    """
-    OutputPort adapter for saving data to CSV file.
-    Attributes
-    ----------
-    path: Path
-        Path object specifying path to CSV output file.
-    """
+    """OutputPort adapter for saving data to CSV file."""
 
     def __init__(self, output_path: Path):
         self.path: Path = output_path
 
     def send_output(self, measured: list[Result], model: list[Result], error: list[Error]) -> None:
-        """
-        Saves output to CSV file specified in path
+        """Saves output to CSV file specified in path
+
         :param measured: A list of measured Result objects.
         :param model: A list of model Result objects.
         :param error: A list of Error objects for given Result objects.
+        :param measured: list[Result]: 
+        :param model: list[Result]: 
+        :param error: list[Error]: 
+
         """
         logging.info(f"Saving results to CSV file: measured={measured} model={model} error={error}")
         os.makedirs(os.path.dirname(self.path.absolute()), exist_ok=True)
@@ -75,34 +73,44 @@ class CsvOutputAdapter(OutputPort):
 
 
 def dictionaries_update(output: tuple, inp: tuple) -> None:
-    """
-    Updates each dictionary in output tuple with corresponding dictionary in inp tuple.
+    """Updates each dictionary in output tuple with corresponding dictionary in inp tuple.
+
     :param output: Being updated.
     :param inp: Update data.
+    :param output: tuple: 
+    :param inp: tuple: 
+
     """
     for i in range(0, len(output)):
         output[i].update(inp[i])
 
 
 def get_any_dict(key: str, data) -> dict:
-    """
-    Creates default dict for CSV output.
+    """Creates default dict for CSV output.
+
     :param key: Dictionary key (CSV header).
     :param data: Dictionary value (CSV row).
-    :return: Dictionary (CSV).
+    :param key: str: 
+    :returns: Dictionary (CSV).
+
     """
     return {key: data}
 
 
 def get_scalar_dicts(key: str, measured: Scalar, model: Scalar, error: ScalarError) -> tuple[
     dict[str, str], dict[str, str], dict[str, str]]:
-    """
-    Creates dict from Scalar data for CSV output.
+    """Creates dict from Scalar data for CSV output.
+
     :param key: Scalar value name (CSV headers).
     :param measured: Measured Scalar (CSV row).
     :param model: Model Scalar (CSV row).
     :param error: ScalarError object for given Scalars (CSV row).
-    :return: Measure, model and error dictionary.
+    :param key: str: 
+    :param measured: Scalar: 
+    :param model: Scalar: 
+    :param error: ScalarError: 
+    :returns: Measure, model and error dictionary.
+
     """
     return (
         {key + SUFFIX_MEASURED: measured.value},
@@ -113,13 +121,18 @@ def get_scalar_dicts(key: str, measured: Scalar, model: Scalar, error: ScalarErr
 
 def get_vector_dicts(key: str, measured: Vector, model: Vector, error: VectorError) -> tuple[
     dict[str, str], dict[str, str], dict[str, str]]:
-    """
-    Creates dict from Vector data for CSV output.
+    """Creates dict from Vector data for CSV output.
+
     :param key: Vector value name (CSV headers).
     :param measured: Measured Vector (CSV row).
     :param model: Model Vector (CSV row).
     :param error: VectorError object for given Vectors (CSV row).
-    :return: Measure, model and error dictionary.
+    :param key: str: 
+    :param measured: Vector: 
+    :param model: Vector: 
+    :param error: VectorError: 
+    :returns: Measure, model and error dictionary.
+
     """
     measure_dict = {}
     model_dict = {}
@@ -134,12 +147,16 @@ def get_vector_dicts(key: str, measured: Vector, model: Vector, error: VectorErr
 
 
 def get_dict(measured: Result, model: Result, error: Error) -> dict:
-    """
-    Creates a dict from Result data for CSV output.
+    """Creates a dict from Result data for CSV output.
+
     :param measured: Measured Result.
     :param model: Model Result
     :param error: Results Error object.
-    :return: Dictionary ready for CSV parsing.
+    :param measured: Result: 
+    :param model: Result: 
+    :param error: Error: 
+    :returns: Dictionary ready for CSV parsing.
+
     """
     result = {}
     measure_dict = {}

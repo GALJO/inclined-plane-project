@@ -17,15 +17,7 @@ from application.result.result import Result
 
 
 class ScalarError:
-    """
-    A class containing measurement errors for given scalars.
-    Attributes
-    ----------
-    abs: Scalar
-        Absolute error.
-    rel: Scalar
-        Relative error (NaN if measured value is 0).
-    """
+    """A class containing measurement errors for given scalars."""
 
     def __init__(self, x: Scalar, x0: Scalar):
         """
@@ -45,17 +37,7 @@ class ScalarError:
 
 
 class VectorError:
-    """
-    A class containing measurement errors for given vectors.
-    Attributes
-    ----------
-    x: ScalarError
-        X cord error.
-    y: ScalarError
-        Y cord error.
-    value: ScalarError
-        Value error.
-    """
+    """A class containing measurement errors for given vectors."""
 
     def __init__(self, vec: Vector, vec0: Vector):
         """
@@ -76,23 +58,7 @@ class VectorError:
 
 
 class Error:
-    """
-    A class containing measurement errors for one cycle.
-    Attributes
-    ----------
-    duration: ScalarError
-        Full duration error.
-    duration1: ScalarError
-        1st to 2nd cycle point duration error.
-    duration2: ScalarError
-        2nd to 3rd cycle point duration error.
-    start_velocity: VectorError
-        Start velocity error.
-    end_velocity: VectorError
-        End velocity error.
-    reach: VectorError
-        Reach error.
-    """
+    """A class containing measurement errors for one cycle."""
 
     def __init__(self, measure: Result, model: Result):
         """

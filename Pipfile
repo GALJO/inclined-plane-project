@@ -8,10 +8,10 @@ pygame-ce = "2.5.*"
 pymunk = "7.2.*"
 pyinstaller = "6.17.*"
 pyyaml = "6.0.*"
-pytest = "9.0.*"
-
 
 [dev-packages]
+pytest = "9.0.*"
+pyment = "*"
 
 [requires]
 python_version = "3.14"
