@@ -15,6 +15,7 @@ permissions and limitations under the License.
 """
 import logging
 
+from application.input.exceptions import InputParsingError
 from application.input.input_port import InputPort
 from application.input.model.input import Input
 
@@ -25,7 +26,7 @@ def handle_error(e: InputParsingError) -> None:
     :param e: InputParsingError
 
     """
-    print(f"Wrong {e.field.name} field given: {e.desc} ({e.code}). Try again.")
+    print(f"Wrong {e.field.name} field given: {e.desc} ({e.CODE}). Try again.")
 
 
 def read_console(msg: str):

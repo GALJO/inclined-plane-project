@@ -13,6 +13,9 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
+import logging
+
+from application.math.scalar import Scalar
 from application.result.result import Result
 
 
@@ -87,3 +90,20 @@ class Error:
                 f"start_velocity={self.start_velocity} "
                 f"end_velocity={self.end_velocity} "
                 f"reach={self.reach})")
+
+
+def prepare_errors(measured: list[Result], model: list[Result]) -> list[Error]:
+    """Prepares Error objects based on results.
+
+    :param measured: list[Result]: Simulated results.
+    :param model: list[Result]: Model results.
+    :returns: List of errors.
+    :rtype: list[Error]
+    """
+    logging.debug(f"Preparing errors.")
+    errors = []
+    for i in range(0, len(model)):
+        errors.append(Error(measured[i], model[i]))
+        logging.debug(f"Prepared error: error={errors[-1]} measured={measured[i]} model={model[i]}")
+    logging.info(f"Prepared errors: n={len(errors)}")
+    return errors

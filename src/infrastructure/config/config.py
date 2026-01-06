@@ -27,6 +27,7 @@ from infrastructure.config.unit_config import UnitConfig
 
 class Config:
     """ """
+
     def __init__(self, math_precision: int,
                  measure_precision: float,
                  log_port: str,
@@ -145,7 +146,10 @@ class Config:
             self.math_precision = get_value(config, ConfigName.math_precision)
             self.measure_precision = get_value(config, ConfigName.measure_precision)
             self.log_port = get_value(config, ConfigName.log, ConfigName.port)
-            self.log_path = Path(get_value(config, ConfigName.log, ConfigName.path))
+            if self.log_port == "FILE":
+                self.log_path = Path(get_value(config, ConfigName.log, ConfigName.path))
+            else:
+                self.log_path = None
             self.log_level = get_value(config, ConfigName.log, ConfigName.level)
             self.output_path = Path(get_value(config, ConfigName.output, ConfigName.path))
             self.output_port = get_value(config, ConfigName.output, ConfigName.port)

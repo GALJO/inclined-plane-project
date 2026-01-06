@@ -24,7 +24,7 @@ from infrastructure.config.config import CONFIG
 
 MSG_TOO_BIG = "Input value too big. Max={} Given={}"
 MSG_TOO_SMALL = "Input value too small. Min={} Given={}"
-MSG_CONVERT = "Input value can not be converted to Scalar. Value={} Unit={}"
+MSG_CONVERT = "Input value can not be converted to Scalar. Given={}"
 
 
 class Input:
@@ -129,7 +129,7 @@ def convert_to_scalar(string: str, unit: str | None) -> Scalar:
     except ValueError as e:
         logging.error(f"ValueError: {e}")
         logging.error(f"Input value can not be converted to Scalar: string={string} unit={unit}")
-        raise InputParsingError.no_field(MSG_CONVERT.format(string, unit))
+        raise InputParsingError.no_field(MSG_CONVERT.format(string))
 
 
 def check_bounds(scalar: Scalar, floor_bound: float | None, ceil_bound: float | None) -> None:

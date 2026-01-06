@@ -13,98 +13,15 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
+import logging
 from math import sin, cos, sqrt
 
-from pymunk import Vec2d
-
-from application.math.math_util import translate_abs, translate
+from application.input.model.input import Input
 from application.math.scalar import Scalar
 from application.math.vector import Vector
+from application.result.cycle import Cycle, collect_cycles
+from application.simulation.model.measurement import Measurement
 from infrastructure.config.config import CONFIG
-
-
-class Measurement:
-    """A class representing a measurement in simulation.
-    It stores data about time of measurement and block parameters.
-    It can be one of two simulation events:\n
-    - Complete stop of the block,\n
-    - Collision between the wall and the block.
-
-
-    Attributes
-    ----------
-    time : Scalar
-        Timestamp of the measurement.
-    position : Vector
-        Measured position of the block.
-    velocity : Vector
-        Measured velocity of the block.
-    """
-
-    def __init__(self, _time: float, _position: Vec2d, _velocity: Vec2d):
-        """
-        Class constructor.
-        Parameters
-        ----------
-        _time: float
-            Timestamp of the measurement.
-        _position: Vec2d
-            Measured position of the block (Vec2d pymunk object)
-        _velocity: Vec2d
-            Measured velocity of the block (Vec2d pymunk object)
-        """
-        self.time = Scalar(_time, CONFIG.unit.time)
-        x, y = translate_abs(_position.x, _position.y)
-        self.position = Vector.from_float(x, y, CONFIG.unit.distance)
-        x, y = translate(_velocity.x, _velocity.y)
-        self.velocity = Vector.from_float(x, y, CONFIG.unit.velocity)
-
-    def __str__(self):
-        """
-        Converts to string.
-        """
-        return f"Measurement(time={self.time} position={self.position} velocity={self.velocity})"
-
-
-class Cycle:
-    """A class representing a cycle of the simulation.
-    One cycle is defined as three Measurements:
-
-    1. The point just after (then bounces off the wall and starts sliding up the plane).\n
-    2. The point stops.\n
-    3. The point just before collision with the wall (after collision new cycle begin).
-
-    Attributes
-    ----------
-    number:
-        int: Number of the cycle.
-    start:
-        Measurement: First step of the cycle.
-    middle:
-        Measurement: Second step of the cycle.
-    end:
-        Measurement: Third step of the cycle.
-    is_full:
-        bool: Is cycle full?
-    """
-
-    def __init__(self, number: int, start_collision: Measurement, middle_measurement: Measurement,
-                 end_collision: Measurement, is_full: bool):
-        """
-        Class constructor.
-        :param number: Number of the cycle.
-        :param start_collision: Measurement of the block when ending last cycle (or first ever measurement).
-        :param middle_measurement: Measurement of the block when closest to complete stop.
-        :param end_collision: Measurement of the block when colliding with the wall.
-        """
-        self.number: int = number
-        self.start: Measurement = start_collision
-        self.middle: Measurement = middle_measurement
-        self.end: Measurement = end_collision
-        self.is_full: bool = is_full
-
-    def __str__(self):
-        return f"Cycle(number={self.number} start={self.start} middle={self.middle} end={self.end})"
 
 
 class Result:
@@ -208,3 +125,63 @@ class Result:
                 f"start_velocity={self.start_velocity} "
                 f"end_velocity={self.end_velocity} "
                 f"reach={self.reach})")
+
+
+def prepare_simulation_results(stop_events: list[Measurement], collision_events: list[Measurement], is_full: bool) \
+        -> list[Result]:
+    """Parses simulation's measurements into readable results.
+
+    :param stop_events: list[Measurement]: Stop events measurements.
+    :param collision_events: list[Measurement]: Collision events measurements.
+    :param is_full: bool: Is cycle full?
+    :returns: List of results.
+    :rtype: list[Result]
+
+    """
+    logging.info(f"Preparing simulation results: is_full={is_full}")
+    results = []
+    cycles = collect_cycles(stop_events, collision_events, is_full)
+    for cycle in cycles:
+        results.append(Result.measured(cycle))
+        logging.debug(f"Prepared result: result={results[-1]} cycle={cycle}")
+    logging.info(f"Prepared simulation results: n={len(results)}")
+    return results
+
+
+def calculate_theoretical_model(inp: Input) -> list[Result]:
+    """Prepares model results based on physics formulas.
+
+    :param inp: Input: The user's input.
+    :returns: Results.
+    :rtype: list[Result]
+    """
+    logging.info(f"Calculating model: input={inp}")
+    if (inp.friction * cos(inp.tilt.value)) / (sin(inp.tilt.value)) < 1:
+        results = [Result.model(0,
+                                inp.velocity,
+                                inp.tilt.value,
+                                inp.friction.value,
+                                CONFIG.g,
+                                True)]
+        logging.debug(f"Calculated model result: n={0} result={results[-1]}")
+        i = 1
+        while results[-1].end_velocity.value > CONFIG.measure_precision:
+            results.append(Result.model(i,
+                                        results[-1].end_velocity,
+                                        inp.tilt.value,
+                                        inp.friction.value,
+                                        CONFIG.g,
+                                        True))
+            logging.debug(f"Calculated model result: n={i} result={results[-1]}")
+            i += 1
+    else:
+        results = [Result.model(0,
+                                inp.velocity,
+                                inp.tilt.value,
+                                inp.friction.value,
+                                CONFIG.g,
+                                False)]
+        logging.info(f"Not full cycle occurred. result={results[0]}")
+
+    logging.info(f"Calculated model: n={len(results)}")
+    return results
