@@ -35,8 +35,8 @@ REACH = "reach"
 
 SUFFIX_MEASURED = "_measured"
 SUFFIX_MODEL = "_model"
-PREFIX_ERROR = "error_"
-PREFIX_RELATIVE_ERROR = "error_rel_"
+SUFFIX_ERROR = "_error"
+SUFFIX_REL_ERROR = "_rerror"
 SUFFIX_VALUE = "_value"
 SUFFIX_X = "_x"
 SUFFIX_Y = "_y"
@@ -115,7 +115,7 @@ def get_scalar_dicts(key: str, measured: Scalar, model: Scalar, error: ScalarErr
     return (
         {key + SUFFIX_MEASURED: measured.value},
         {key + SUFFIX_MODEL: model.value},
-        {PREFIX_ERROR + key: error.abs.value, PREFIX_RELATIVE_ERROR + key: error.rel.value}
+        {key + SUFFIX_ERROR: error.abs.value, key + SUFFIX_REL_ERROR: error.rel.value}
     )
 
 
@@ -178,7 +178,7 @@ def get_dict(measured: Result, model: Result, error: Error) -> dict:
     dictionaries_update((measure_dict, model_dict, error_dict),
                         get_vector_dicts(REACH, measured.reach, model.reach, error.reach))
 
-    result.update(get_any_dict(CYCLE_NUMBER, model.number))
+    result.update(get_any_dict(CYCLE_NUMBER, model.number + 1))
     result.update(measure_dict)
     result.update(model_dict)
     result.update(error_dict)

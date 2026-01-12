@@ -153,7 +153,7 @@ def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-        if (not is_full and len(stop_events) > 10) or (is_full and len(collision_events) >= model_cycles_amount):
+        if (not is_full and len(stop_events) > 10) or (is_full and len(collision_events) >= model_cycles_amount + 1):
             running = False
 
         if abs(block.velocity[0]) < (CONFIG.measure_precision * CONFIG.scale) and abs(block.velocity[1]) < (
