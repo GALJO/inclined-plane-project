@@ -17,10 +17,9 @@ import logging
 
 
 def catcher(f):
-    """Wrapper that catches any unhandled exception to log it.
+    """Wrapper that catches any unhandled exception.
 
-    :param f: Main function.
-
+    :param f: Function.
     """
 
     def wrap():

@@ -54,7 +54,7 @@ class ConsoleInputAdapter(InputPort):
         while True:
             logging.info(f"Trying to read the input from console: trial_nr={trial}.")
             logging.debug(f"Reading input from console.")
-            print("Welcome in the InclinedPlane. Provide constants:")
+            print("\nWelcome in the InclinedPlane. Provide constants:")
             print("(You can use multiplies of pi, eg. 0.3p = 0.3 * pi)")
             angle = input("Tilt of plane (rad) (0, 0.5pi) = ")
             logging.debug(f"Received input: angle={angle}")

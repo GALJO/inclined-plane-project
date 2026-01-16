@@ -14,7 +14,7 @@ or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
 class InputConfig:
-    """ """
+    """Input config."""
     def __init__(self, port: str,
                  min_tilt: float | None,
                  min_mass: float | None,

@@ -25,22 +25,29 @@ from infrastructure.config.config import CONFIG
 
 
 class Result:
+    """A class containing Result for one cycle.
+
+    Attributes
+    ----------
+    number
+        (int) Number of the cycle.
+    is_full
+        (bool) Is the cycle full?
+    duration1
+        (Scalar) A duration from first to second measurement of the cycle.
+    duration2
+        (Scalar) A duration from second to third measurement of the cycle.
+    start_velocity
+        (Vector) A velocity in first measurement of the cycle.
+    end_velocity
+        (Vector) A velocity in third measurement of the cycle.
+    reach
+        (Vector) A distance between first and second measurement's position.
+    """
 
     def __init__(self, number: int, is_full: bool, duration1: Scalar, duration2: Scalar, start_velocity: Vector,
                  end_velocity: Vector, reach: Vector):
-        """
-        Class constructor
-
-        Attributes
-        ----------
-        number: int
-        is_full: bool
-        duration1: Scalar
-        duration2: Scalar
-        start_velocity: Vector
-        end_velocity: Vector
-        reach
-        """
+        """Class constructor"""
         self.number = number
         self.is_full = is_full
         self.duration1 = duration1
@@ -52,12 +59,9 @@ class Result:
 
     @classmethod
     def measured(cls, cycle: Cycle):
-        """Parses a cycle to readable results.
+        """Returns a Result parsed from a Cycle instance.
 
         :param cycle: Cycle
-        :returns: Result.
-        :rtype: Result
-
         """
         return cls(cycle.number,
                    cycle.is_full,
@@ -71,30 +75,14 @@ class Result:
 
     @classmethod
     def model(cls, number: int, start_velocity: Vector, tilt: float, f: float, g: float, is_full: bool):
-        """Creates model Result using physical formulas.
+        """Returns Result computed using given data and physics formulas.
 
-        :param number: 
-        :type number: int
-        :param Number of the cycle.: 
-        :param start_velocity: 
-        :type start_velocity: Vector
-        :param Velocity at the 1st point of cycle (meters per second).: 
-        :param tilt: Tilt of plane (radians).
-        :type tilt: float
-        :param f: Coulomb's friction coefficient.
-        :type f: float
-        :param g: Value of gravitational acceleration (Vector is parallel to Y axis).
-        :type g: float
-        :param is_full: True if the cycle is full.
-        :type is_full: bool
-        :param number: int: 
-        :param start_velocity: Vector: 
-        :param tilt: float: 
-        :param f: float: 
-        :param g: float: 
-        :param is_full: bool: 
-
-        
+        :param number: int: Number of the cycle.
+        :param start_velocity: Vector: Starting velocity of the cycle.
+        :param tilt: Tilt angle.
+        :param f: Friction coefficient.
+        :param g: Gravitational acceleration.
+        :param is_full: Is cycle full?
         """
         v0 = start_velocity.value.value
         reach_value = (v0 * v0) / (2 * g * (f * cos(tilt) + sin(tilt)))
@@ -114,9 +102,6 @@ class Result:
         return cls(number, is_full, d1, d2 if is_full else Scalar.nan(), start_velocity, end_velocity, reach)
 
     def __str__(self):
-        """
-        Converts to string.
-        """
         return (f"Result(number={self.number} "
                 f"is_full={self.is_full} "
                 f"duration1={self.duration1} "
@@ -129,14 +114,13 @@ class Result:
 
 def prepare_simulation_results(stop_events: list[Measurement], collision_events: list[Measurement], is_full: bool) \
         -> list[Result]:
-    """Parses simulation's measurements into readable results.
+    """Parses a simulation's measurements into Results.
 
     :param stop_events: list[Measurement]: Stop events measurements.
     :param collision_events: list[Measurement]: Collision events measurements.
     :param is_full: bool: Is cycle full?
-    :returns: List of results.
-    :rtype: list[Result]
 
+    :returns: List of Results.
     """
     logging.info(f"Preparing simulation results: is_full={is_full}")
     results = []
@@ -149,22 +133,22 @@ def prepare_simulation_results(stop_events: list[Measurement], collision_events:
 
 
 def calculate_theoretical_model(inp: Input) -> list[Result]:
-    """Prepares model results based on physics formulas.
+    """Prepares model results.
 
     :param inp: Input: The user's input.
-    :returns: Results.
-    :rtype: list[Result]
+
+    :returns: List of Results.
     """
     logging.info(f"Calculating model: input={inp}")
     if (inp.friction * cos(inp.tilt.value)) / (sin(inp.tilt.value)) < 1:
-        results = [Result.model(0,
+        results = [Result.model(1,
                                 inp.velocity,
                                 inp.tilt.value,
                                 inp.friction.value,
                                 CONFIG.g,
                                 True)]
         logging.debug(f"Calculated model result: n={0} result={results[-1]}")
-        i = 1
+        i = 2
         while results[-1].end_velocity.value > CONFIG.measure_precision:
             results.append(Result.model(i,
                                         results[-1].end_velocity,
@@ -175,7 +159,7 @@ def calculate_theoretical_model(inp: Input) -> list[Result]:
             logging.debug(f"Calculated model result: n={i} result={results[-1]}")
             i += 1
     else:
-        results = [Result.model(0,
+        results = [Result.model(1,
                                 inp.velocity,
                                 inp.tilt.value,
                                 inp.friction.value,

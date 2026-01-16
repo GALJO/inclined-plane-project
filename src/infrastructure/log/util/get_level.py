@@ -19,10 +19,11 @@ FORMAT = "[%(asctime)s] [%(levelname)s] || [%(funcName)s] %(filename)s :: %(mess
 
 
 def get_level(level: str):
-    """
+    """Gets log level.
 
-    :param level: str: 
+    :param level: str: Log level in string.
 
+    :returns: Log level readable for logging.
     """
     match level:
         case "DEBUG":

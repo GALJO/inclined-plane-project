@@ -23,7 +23,7 @@ from infrastructure.log.adapter.file_log_adapter import FileLogAdapter
 
 
 class AppPorts:
-    """Contains every abstract."""
+    """Contains ports."""
 
     def __init__(self):
         self.log = configure_log_port()
@@ -32,7 +32,7 @@ class AppPorts:
 
 
 def configure_log_port():
-    """Configures log abstract."""
+    """Configures log port."""
     match CONFIG.log_port:
         case "CONSOLE":
             logging.info("Chosen log configuration: CONSOLE")
@@ -49,7 +49,7 @@ def configure_log_port():
 
 
 def configures_input_port():
-    """Configures input abstract."""
+    """Configures input port."""
     match CONFIG.input.port:
         case "CONSOLE":
             logging.info("Chosen input configuration: CONSOLE")
@@ -60,7 +60,7 @@ def configures_input_port():
 
 
 def configure_output_port():
-    """Configures output abstract."""
+    """Configures output port."""
     match CONFIG.output_port:
         case "CSV":
             logging.info("Chosen output configuration: CSV")

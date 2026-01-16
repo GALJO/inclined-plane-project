@@ -23,7 +23,7 @@ from infrastructure.config.init_config import INIT_CONFIG
 
 
 def init_pre_logging() -> None:
-    """ """
+    """Initializes the pre-logging."""
     os.makedirs(os.path.dirname(INIT_CONFIG.prelog_path.absolute()), exist_ok=True)
     ch = logging.FileHandler(INIT_CONFIG.prelog_path.absolute(), "w")
     ch.setLevel(DEBUG)

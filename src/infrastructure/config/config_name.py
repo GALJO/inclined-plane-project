@@ -17,7 +17,7 @@ from enum import Enum
 
 
 class ConfigName(Enum):
-    """ """
+    """Names in a YAML config file."""
     port = "port"
     path = "path"
 

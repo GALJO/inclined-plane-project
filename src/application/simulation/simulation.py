@@ -30,12 +30,10 @@ from infrastructure.config.config import CONFIG
 
 
 def init_space(inp: Input) -> tuple[Space, Body]:
-    """Function initializes the simulation's space.
+    """Initializes a simulation's space.
 
-    :param inp: Input: The user's input.
-    :returns: Pymunk space and the point's body.
-    :rtype: tuple[Space, Body]
-
+    :param inp: Input: A user's input.
+    :returns: pymunk.Space instance and pymunk.Body instance (body of the block).
     """
     logging.info(f"Initializing simulation space: input={inp}")
     space = pymunk.Space()
@@ -89,12 +87,11 @@ def init_space(inp: Input) -> tuple[Space, Body]:
 
 
 def handle_collision(arbiter: Arbiter, space: Space, data: list[Measurement]) -> None:
-    """Handles the collision event.
+    """A collision handler.
 
-    :param arbiter: Arbiter: Collision data object.
-    :param space: Space: Pymunk space.
-    :param data: list[Measurement]: List to append Measurement from collision.
-
+    :param arbiter: pymunk.Arbiter: Collision data object.
+    :param space: pymunk.Space
+    :param data: list[Measurement]: List of collision events.
     """
     data.append(Measurement(round(time(), 2), arbiter.shapes[1].body.position, arbiter.shapes[1].body.velocity))
     logging.debug(f"Block-wall collision detected: measurement={data[-1]}")
@@ -102,19 +99,20 @@ def handle_collision(arbiter: Arbiter, space: Space, data: list[Measurement]) ->
 
 def simulate(space: Space, block: Body, inp: Input, model_cycles_amount: int, is_full: bool) -> \
         tuple[list[Measurement], list[Measurement], Scalar]:
-    """Simulates the scenario for given data in physics engine.
+    """Simulates the scenario for given data in pymunk engine.
 
     Simulation cycle: Look up the Cycle object docstring.
 
     Simulation events: Look up the Measurement object docstring.
 
-    :param space: Space: The simulation's space.
-    :param block: Body: The point's body.
-    :param inp: Input: The user's input.
-    :param model_cycles_amount: int: Expected amount of cycles based on model results.
-    :param is_full: bool: Is cycle full in model results?
-    :returns: A list of Measurements from the collision events, a list of Measurements from the stop events, elapsed duration of the simulation.
-    :rtype: tuple[list[Measurement], list[Measurement], Scalar]
+    :param space: pymunk.Space
+    :param block: pymunk.Body: The block's body.
+    :param inp: Input: A user's input.
+    :param model_cycles_amount: int: A expected amount of cycles based on theoretical results.
+    :param is_full: bool: Is the model cycle full?
+    :returns: A list of Measurements from a collision events,
+    a list of Measurements from a stop events,
+    elapsed duration of a simulation.
     """
     display = pygame.display.set_mode(CONFIG.resolution)
     pygame.display.set_caption("InclinedPlane -- SIMULATION")

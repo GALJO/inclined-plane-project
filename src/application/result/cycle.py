@@ -21,40 +21,46 @@ from application.simulation.model.measurement import Measurement
 
 
 class Cycle:
-    """A class representing a cycle of the simulation.
-    One cycle is defined as three Measurements:
+    """A class representing a cycle of a simulation.
 
-    1. The point just after (then bounces off the wall and starts sliding up the plane).\n
-    2. The point stops.\n
-    3. The point just before collision with the wall (after collision new cycle begin).
+    One cycle is defined as three Measurement instances:
+
+    1. Measured while collision event (either start of simulation or last cycle's third measurement)
+
+    2. Measured while stop event.
+
+    3. Measured while collision event (may be end of simulation if cycle is not full).
+
+    A cycle is not full only if 3-rd measurement did not happen (is end of simulation).
 
     Attributes
     ----------
     number:
-        int: Number of the cycle.
+        (int) Number of the cycle.
     start:
-        Measurement: First step of the cycle.
+        (Measurement) First of a cycle.
     middle:
-        Measurement: Second step of the cycle.
+        (Measurement) Second of a cycle.
     end:
-        Measurement: Third step of the cycle.
+        (Measurement) Third of a cycle.
     is_full:
-        bool: Is cycle full?
+        (bool) Is cycle full?
     """
 
-    def __init__(self, number: int, start_collision: Measurement, middle_measurement: Measurement,
-                 end_collision: Measurement, is_full: bool):
-        """
-        Class constructor.
-        :param number: Number of the cycle.
-        :param start_collision: Measurement of the block when ending last cycle (or first ever measurement).
-        :param middle_measurement: Measurement of the block when closest to complete stop.
-        :param end_collision: Measurement of the block when colliding with the wall.
+    def __init__(self, number: int, first_measurement: Measurement, second_measurement: Measurement,
+                 third_measurement: Measurement, is_full: bool):
+        """Constructor.
+
+        :param number: int: Number of the cycle.
+        :param first_measurement: Measurement: First measurement.
+        :param second_measurement: Measurement: Second measurement.
+        :param third_measurement: Measurement: Third measurement.
+        :param is_full: bool: Is cycle full?
         """
         self.number: int = number
-        self.start: Measurement = start_collision
-        self.middle: Measurement = middle_measurement
-        self.end: Measurement = end_collision
+        self.start: Measurement = first_measurement
+        self.middle: Measurement = second_measurement
+        self.end: Measurement = third_measurement
         self.is_full: bool = is_full
 
     def __str__(self):
@@ -62,14 +68,12 @@ class Cycle:
 
 
 def collect_cycles(stop_events: list[Measurement], collision_events: list[Measurement], is_full: bool) -> list[Cycle]:
-    """Parses simulation's results to simulation's Cycles.
+    """Parses raw Measurements to simulation's Cycles.
 
     :param stop_events: list[Measurement]: Stop events measurements.
     :param collision_events: list[Measurement]: Collision events measurements.
     :param is_full: bool: Is cycle full?
-    :returns: Simulation's cycles.
-    :rtype: list[Cycle]
-
+    :returns: Cycle list.
     """
     logging.debug(f"Collecting cycles.")
     cycles = []

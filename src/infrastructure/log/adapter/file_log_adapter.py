@@ -24,19 +24,19 @@ from infrastructure.log.log_port import LogPort
 
 
 class FileLogAdapter(LogPort):
-    """LoggingPort adapter for logging to file."""
+    """LogPort adapter for file logging."""
 
     def __init__(self, _level: str, _path: Path):
-        """
-        Constructor.
-        :param _level: Minimum level of log to be shown.
-        :param _path: Path to log file.
+        """Constructor.
+
+        :param _level: str: The log level.
+        :param _path: Path: A target file's path.
         """
         self.log_level = get_level(_level)
         self.log_path = _path
 
     def setup(self):
-        """Activate logging to file."""
+        """Activate logging to a file."""
         logging.warning(f"Pre-setup log end. From now on logging to file: log_file={self.log_path.absolute()}")
         logger = logging.getLogger()
         logger.handlers.clear()

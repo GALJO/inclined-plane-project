@@ -22,43 +22,38 @@ from infrastructure.config.config import CONFIG
 
 
 class Measurement:
-    """A class representing a measurement in simulation.
-    It stores data about time of measurement and block parameters.
-    It can be one of two simulation events:\n
-    - Complete stop of the block,\n
-    - Collision between the wall and the block.
+    """A class representing a simulation's measurement.
 
+    It is taken while:
+
+    - A collision event - when the block collides,
+
+    - A stop event - when the block stops moving,
+
+    - A start or an end of a simulation.
 
     Attributes
     ----------
     time : Scalar
         Timestamp of the measurement.
     position : Vector
-        Measured position of the block.
+        Position of the block.
     velocity : Vector
-        Measured velocity of the block.
+        Velocity of the block.
     """
 
-    def __init__(self, _time: float, _position: Vec2d, _velocity: Vec2d):
+    def __init__(self, time: float, position: Vec2d, velocity: Vec2d):
+        """Constructor.
+
+        :param time: float: Timestamp of the measurement.
+        :param position: pymunk.Vec2d: Position of the block in the simulation.
+        :param velocity: pymunk.Vec2d: Velocity of the block in the simulation.
         """
-        Class constructor.
-        Parameters
-        ----------
-        _time: float
-            Timestamp of the measurement.
-        _position: Vec2d
-            Measured position of the block (Vec2d pymunk object)
-        _velocity: Vec2d
-            Measured velocity of the block (Vec2d pymunk object)
-        """
-        self.time = Scalar(_time, CONFIG.unit.time)
-        x, y = translate_abs(_position.x, _position.y)
+        self.time = Scalar(time, CONFIG.unit.time)
+        x, y = translate_abs(position.x, position.y)
         self.position = Vector.from_float(x, y, CONFIG.unit.distance)
-        x, y = translate(_velocity.x, _velocity.y)
+        x, y = translate(velocity.x, velocity.y)
         self.velocity = Vector.from_float(x, y, CONFIG.unit.velocity)
 
     def __str__(self):
-        """
-        Converts to string.
-        """
         return f"Measurement(time={self.time} position={self.position} velocity={self.velocity})"

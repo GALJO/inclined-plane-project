@@ -21,7 +21,7 @@ from infrastructure.log.log_port import LogPort
 
 
 class ConsoleLogAdapter(LogPort):
-    """Logging adapter for console logging."""
+    """LogPort adapter for console logging."""
 
     def __init__(self, _log_level: str):
         """
@@ -31,7 +31,7 @@ class ConsoleLogAdapter(LogPort):
         self.log_level = get_level(_log_level)
 
     def setup(self):
-        """Activate logging to console."""
+        """Activate logging to the console."""
         logging.warning(f"Pre-setup log end. From now on logging to console.")
         logger = logging.getLogger()
         logger.handlers.clear()

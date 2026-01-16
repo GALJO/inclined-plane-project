@@ -81,14 +81,14 @@ There are 50 output values for each cycle. We distinguish 6 main groups of value
 - `end_velocity_[x/y/value]` (vector) - end velocity of the cycle data.
 - `reach_[x/y/value]` (vector) - distance traveled from 1st to 2nd cycle stage data.
 
-Each group distinguish 4 values recognized by prefixes:
+Each group distinguish 4 values recognized by suffixes:
 
 - `[group]_measured` - output from simulation.
 - `[group]_model` - output from calculated physics model.
 - `[group]_error` - error (difference between measured and model values).
 - `[group]_rerror` - relative error based on error.
 
-Additional 2 not grouped values:
+There are additional 2 not grouped values:
 - `cycle_number` - The number of cycle (starting from 1).
 - `is_full` - True if the cycle is full, false otherwise.
 
@@ -107,12 +107,12 @@ A **cycle** is defined in **The scenario** section.
 
 #### Variables.
 
-- $\vec{v_{k0}}$ - The start velocity of the $k$-th cycle.
-- $\vec{v_{k1}}$ - The end velocity of the $k$-th cycle (hereinafter referred to as the *$k$-th end velocity*).
-- $\vec{x_{k}}$ - The displacement vector of the point between the 1st and the 2nd step of the $k$-th cycle.
-- $t_{k1}$ - The time elapsed between the 1st and the 2nd step of the $k$-th cycle.
+- $\vec{v_{k0}}$ - The start velocity of $k$-th cycle.
+- $\vec{v_{k1}}$ - The end velocity of $k$-th cycle (hereinafter referred to as *$k$-th end velocity*).
+- $\vec{x_{k}}$ - The displacement vector of the point between the 1st and the 2nd step of $k$-th cycle.
+- $t_{k1}$ - The time elapsed between the 1st and the 2nd step of $k$-th cycle.
 - $t_{k2}$ - The time elapsed between the 2nd and the 3rd step of $k$-th cycle.
-- $t_{k}$ - The full duration of the $k$-th cycle.
+- $t_{k}$ - The full duration of $k$-th cycle.
 
 #### Constants.
 
@@ -133,7 +133,7 @@ $\vec{k} = [k_x, k_y]$
 <hr>  
 
 ![scheme 4.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme1.jpg)  
-(scheme 4. - the start of the $k$-th cycle)
+(scheme 4. - the start of $k$-th cycle)
 
 The static, tilted surface is hereinafter referred to as the *plane*.  
 The static, perfectly elastic surface, normal to the plane is hereinafter referred to as the *wall*.  
@@ -143,10 +143,10 @@ $\vec{T}$ - The friction force between the point and the plane.
 $\vec{Q}$ - The point's gravity force.  
 $\vec{R}$ - The plane's reaction force to the normal of the point's gravity force.
 
-Between the end of any $k$-th cycle and the start of the $(k+1)$-th cycle one and only event is the perfectly elastic
+Between the end of any $k$-th cycle and the start of $(k+1)$-th cycle one and only event is the perfectly elastic
 collision between the point and the wall. According to collision's mechanics:  *A perfectly elastic collision is defined
 as one in which there is no loss of kinetic energy in the collision.*[^1]. As the wall is the static object ($E=0$), the
-kinetic energy of the point is equal at the end of the $k$-th cycle and start of the $(k+1)$-th cycle. Therefore, there
+kinetic energy of the point is equal at the end of $k$-th cycle and start of $(k+1)$-th cycle. Therefore, there
 is a recurrence relation between adjacent _cycles_ that can be expressed as[^2]:
 
 <div style="text-align: center;">  
@@ -180,8 +180,8 @@ $t_{k+1} = t_{(k+1)1} + t_{(k+1)2}$ &ensp;&ensp; $(6)$
 
 </div>  
 
-Using formulas $(1)$ - $(6)$ we obtain full model data for the $(k+1)$-th cycle  
-knowing only constants and the $k$-th end velocity.
+Using formulas $(1)$ - $(6)$ we obtain full model data for $(k+1)$-th cycle  
+knowing only constants and $k$-th end velocity.
 
 There is a corner case when the $\vec{T}$ value is bigger than the horizontal $\vec{Q}$ value.  
 In this situation, in the 2nd stage the $\vec{T}$ transforms to the static friction $\vec{T_s}$ and the point stops
@@ -199,7 +199,7 @@ $\frac{\mu\cos{\theta}}{sin{\theta}} \geq 1$ &ensp;&ensp; (7)
 
 - $(1)$ - $(6)$ recurrence formulas are being used to prepare the theoretical model of scenario,
 - The $\vec{v_{01}}$ is provided by the user,
-- Cycles are being counted until the $n$-th end velocity is (close to) zero,
+- Cycles are being counted until $k$-th end velocity is (close to) zero,
 - Before counting cycles, it is checked if the not full cycle occurred based on the $(7)$ formula,
 - The simulation's results are being predicted based on the theoretical model.
 
@@ -212,31 +212,27 @@ $\frac{\mu\cos{\theta}}{sin{\theta}} \geq 1$ &ensp;&ensp; (7)
 
 [^4]: [Coulomb Friction](https://www.sciencedirect.com/topics/engineering/coulomb-friction) (Access: 11.12.2025)
 
-[^5]: [Work Done by a Force](https://www.monash.edu/student-academic-success/physics/relationships-between-force,-energy-and-mass/work-done-by-a-force) (
-Access: 11.12.2025)
+[^5]: [Work Done by a Force](https://www.monash.edu/student-academic-success/physics/relationships-between-force,-energy-and-mass/work-done-by-a-force) (Access: 11.12.2025)
 
-[^6]: [Newton’s Laws of Motion](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/#newtons-first-law-inertia) (
-Access: 11.12.2025)
+[^6]: [Newton’s Laws of Motion](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/#newtons-first-law-inertia) (Access: 11.12.2025)
 
 
 ### 4. The simulation's details.
 
 <hr> 
 
-In this section you can learn some technical facts and issues with the simulation in the program.  
+In this section you can learn some technical facts and issues with a simulation in the program.  
 
 <hr>  
 
-The simulation run on the *[Pymunk](https://www.pymunk.org)* physics engine and the *[Pygame](https://www.pygame.org)*
-graphical interface.  
+A simulation runs on the *[Pymunk](https://www.pymunk.org)* physics engine and the *[Pygame](https://www.pygame.org)* graphical interface.  
 In the simulation the mass point is replaced with the homogeneous block with infinite inertia, which  
 is good approximation of the mass point in physics.
 
 A main objective of the simulation is to visualize the scenario for user. Therefore, the simulation  
 is scaled up, because it does not look good with real numbers. However, proportions are kept and  
-the program *unscales* simulation's measurements and final results are not scaled.
-
-If the user uses too big starting velocity, block may fall out of the simulation due to the limitations of the space.
+the program *unscales* simulation's measurements and final results are 1:1 with model. 
+A scale can be changed via the config file.
 
 ### 5. How to set up dev's environment.
 

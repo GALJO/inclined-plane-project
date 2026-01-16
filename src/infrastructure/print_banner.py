@@ -19,11 +19,11 @@ from pathlib import Path
 BANNER = Path("BANNER")
 NOTICE = Path("NOTICE")
 
+
 def print_banner(version: str):
-    """
+    """Prints and logs the app's banner.
 
-    :param version: str: 
-
+    :param version: str: Version to print.
     """
     banner = open(BANNER, "r").read()
     notice = open(NOTICE, "r").read()
