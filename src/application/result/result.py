@@ -13,134 +13,41 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-from math import sin, cos, sqrt, tan
+import logging
+from math import sin, cos, sqrt
 
-from pymunk import Vec2d
-
-from application.math.math_util import translate_abs, translate
+from application.input.model.input import Input
 from application.math.scalar import Scalar
 from application.math.vector import Vector
+from application.result.cycle import Cycle, collect_cycles
+from application.simulation.model.measurement import Measurement
 from infrastructure.config.config import CONFIG
 
 
-class Measurement:
-    """
-    A class representing a measurement in simulation.
-    It stores data about time of measurement and block parameters.
-    It can be one of two simulation events:\n
-    - Complete stop of the block,\n
-    - Collision between the wall and the block.
-
-    Attributes
-    ----------
-    time : Scalar
-        Timestamp of the measurement.
-    position : Vector
-        Measured position of the block.
-    velocity : Vector
-        Measured velocity of the block.
-    """
-
-    def __init__(self, _time: float, _position: Vec2d, _velocity: Vec2d):
-        """
-        Class constructor.
-        Parameters
-        ----------
-        _time: float
-            Timestamp of the measurement.
-        _position: Vec2d
-            Measured position of the block (Vec2d pymunk object)
-        _velocity: Vec2d
-            Measured velocity of the block (Vec2d pymunk object)
-        """
-        self.time = Scalar(_time, CONFIG.unit.time)
-        x, y = translate_abs(_position.x, _position.y)
-        self.position = Vector.from_float(x, y, CONFIG.unit.distance)
-        x, y = translate(_velocity.x, _velocity.y)
-        self.velocity = Vector.from_float(x, y, CONFIG.unit.velocity)
-
-    def __str__(self):
-        """
-        Converts to string.
-        """
-        return f"Measurement(time={self.time} position={self.position} velocity={self.velocity})"
-
-
-class Cycle:
-    """
-    A class representing a cycle of the simulation.
-    One cycle is defined as three Measurements:\n
-    1. Block collides with the wall (then bounces off the wall and starts sliding up the plane).\n
-    2. Block stops in one point of the plane (then starts sliding down).\n
-    3. Block collides with the wall (also beginning of a new cycle).
-    Attributes
-    ----------
-    number: float
-        Number of the cycle.
-    start: Measurement
-        First point of the cycle (collision with the wall).
-    middle: Measurement
-        Second point of the cycle (stop).
-    end: Measurement
-        Third point of the cycle (collision with the wall).
-    """
-
-    def __init__(self, _number: int, _start_collision: Measurement, _middle_measurement: Measurement,
-                 _end_collision: Measurement):
-        """
-        Class constructor.
-        :param _number: Number of the cycle.
-        :param _start_collision: Measurement of the block when ending last cycle (or first ever measurement).
-        :param _middle_measurement: Measurement of the block when closest to complete stop.
-        :param _end_collision: Measurement of the block when colliding with the wall.
-        """
-        self.number = _number
-        self.start = _start_collision
-        self.middle = _middle_measurement
-        self.end = _end_collision
-
-    def __str__(self):
-        return f"Cycle(number={self.number} start={self.start} middle={self.middle} end={self.end})"
-
-
 class Result:
-    """
-    A class containing results of each cycle.
+    """A class containing Result for one cycle.
+
     Attributes
     ----------
-    number: int
-        Number of the result (cycle).
-    is_full: bool
-        True if the cycle is full.
-        Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
-    duration1: Scalar
-        Time measured from 1st point of cycle to 2nd point of cycle.
-    duration2: Scalar
-        Time measured from 2nd point of cycle to 3rd point of cycle. If cycle isn't full is NaN.
-    duration: Scalar
-        Time of full cycle. If cycle isn't full is duration1.
-    start_velocity: Vector
-        Velocity at the 1st point of cycle (always positive coordinates).
-    end_velocity: Vector
-        Velocity at the 3rd point of cycle.
-    reach: Vector
-        Block displacement vector between 1st and 2nd point of cycle.
+    number
+        (int) Number of the cycle.
+    is_full
+        (bool) Is the cycle full?
+    duration1
+        (Scalar) A duration from first to second measurement of the cycle.
+    duration2
+        (Scalar) A duration from second to third measurement of the cycle.
+    start_velocity
+        (Vector) A velocity in first measurement of the cycle.
+    end_velocity
+        (Vector) A velocity in third measurement of the cycle.
+    reach
+        (Vector) A distance between first and second measurement's position.
     """
 
     def __init__(self, number: int, is_full: bool, duration1: Scalar, duration2: Scalar, start_velocity: Vector,
                  end_velocity: Vector, reach: Vector):
-        """
-        Class constructor
-        Parameters
-        ----------
-        number: int
-        is_full: bool
-        duration1: Scalar
-        duration2: Scalar
-        start_velocity: Vector
-        end_velocity: Vector
-        reach
-        """
+        """Class constructor"""
         self.number = number
         self.is_full = is_full
         self.duration1 = duration1
@@ -151,18 +58,15 @@ class Result:
         self.reach = reach
 
     @classmethod
-    def measured(cls, cycle: Cycle, is_full: bool):
-        """
-        Parses measured Cycle object to create result.
-        :param cycle: Cycle object.
-        :param is_full: True if the cycle is full.
-        Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
-        :returns: Result object
+    def measured(cls, cycle: Cycle):
+        """Returns a Result parsed from a Cycle instance.
+
+        :param cycle: Cycle
         """
         return cls(cycle.number,
-                   is_full,
+                   cycle.is_full,
                    cycle.middle.time - cycle.start.time,
-                   cycle.end.time - cycle.middle.time if is_full else Scalar.nan(),
+                   cycle.end.time - cycle.middle.time if cycle.is_full else Scalar.nan(),
                    Vector(abs(cycle.start.velocity.x / CONFIG.scale),
                           abs(cycle.start.velocity.y / CONFIG.scale)),
                    Vector(cycle.end.velocity.x / CONFIG.scale, cycle.end.velocity.y / CONFIG.scale),
@@ -171,27 +75,14 @@ class Result:
 
     @classmethod
     def model(cls, number: int, start_velocity: Vector, tilt: float, f: float, g: float, is_full: bool):
-        """
-        Creates model Result using physical formulas.
-        Parameters
-        ----------
-        number: int
-        Number of the cycle.
-        start_velocity: Vector
-        Velocity at the 1st point of cycle (meters per second).
-        tilt: float
-            Tilt of plane (radians).
-        f: float
-            Coulomb's friction coefficient.
-        g: float
-            Value of gravitational acceleration (Vector is parallel to Y axis).
-        is_full: bool
-            True if the cycle is full.
-            Cycle is not full only if 3rd point of cycle did not happen (block stopped in 2nd point).
-        Returns
-        -------
-        result: Result
-            Result object
+        """Returns Result computed using given data and physics formulas.
+
+        :param number: int: Number of the cycle.
+        :param start_velocity: Vector: Starting velocity of the cycle.
+        :param tilt: Tilt angle.
+        :param f: Friction coefficient.
+        :param g: Gravitational acceleration.
+        :param is_full: Is cycle full?
         """
         v0 = start_velocity.value.value
         reach_value = (v0 * v0) / (2 * g * (f * cos(tilt) + sin(tilt)))
@@ -199,7 +90,7 @@ class Result:
         if not is_full:
             end_velocity = Vector.from_float(0, 0, CONFIG.unit.velocity)
         else:
-            v1 = v0 * sqrt((sin(tilt)-f*cos(tilt))/(sin(tilt)+f*cos(tilt)))
+            v1 = v0 * sqrt((sin(tilt) - f * cos(tilt)) / (sin(tilt) + f * cos(tilt)))
             end_velocity = Vector.from_float(-cos(tilt) * v1, -sin(tilt) * v1,
                                              CONFIG.unit.velocity)
 
@@ -211,9 +102,6 @@ class Result:
         return cls(number, is_full, d1, d2 if is_full else Scalar.nan(), start_velocity, end_velocity, reach)
 
     def __str__(self):
-        """
-        Converts to string.
-        """
         return (f"Result(number={self.number} "
                 f"is_full={self.is_full} "
                 f"duration1={self.duration1} "
@@ -222,3 +110,62 @@ class Result:
                 f"start_velocity={self.start_velocity} "
                 f"end_velocity={self.end_velocity} "
                 f"reach={self.reach})")
+
+
+def prepare_simulation_results(stop_events: list[Measurement], collision_events: list[Measurement], is_full: bool) \
+        -> list[Result]:
+    """Parses a simulation's measurements into Results.
+
+    :param stop_events: list[Measurement]: Stop events measurements.
+    :param collision_events: list[Measurement]: Collision events measurements.
+    :param is_full: bool: Is cycle full?
+
+    :returns: List of Results.
+    """
+    logging.info(f"Preparing simulation results: is_full={is_full}")
+    results = []
+    cycles = collect_cycles(stop_events, collision_events, is_full)
+    for cycle in cycles:
+        results.append(Result.measured(cycle))
+        logging.debug(f"Prepared result: result={results[-1]} cycle={cycle}")
+    logging.info(f"Prepared simulation results: n={len(results)}")
+    return results
+
+
+def calculate_theoretical_model(inp: Input) -> list[Result]:
+    """Prepares model results.
+
+    :param inp: Input: The user's input.
+
+    :returns: List of Results.
+    """
+    logging.info(f"Calculating model: input={inp}")
+    if (inp.friction * cos(inp.tilt.value)) / (sin(inp.tilt.value)) < 1:
+        results = [Result.model(1,
+                                inp.velocity,
+                                inp.tilt.value,
+                                inp.friction.value,
+                                CONFIG.g,
+                                True)]
+        logging.debug(f"Calculated model result: n={0} result={results[-1]}")
+        i = 2
+        while results[-1].end_velocity.value > CONFIG.measure_precision:
+            results.append(Result.model(i,
+                                        results[-1].end_velocity,
+                                        inp.tilt.value,
+                                        inp.friction.value,
+                                        CONFIG.g,
+                                        True))
+            logging.debug(f"Calculated model result: n={i} result={results[-1]}")
+            i += 1
+    else:
+        results = [Result.model(1,
+                                inp.velocity,
+                                inp.tilt.value,
+                                inp.friction.value,
+                                CONFIG.g,
+                                False)]
+        logging.info(f"Not full cycle occurred. result={results[0]}")
+
+    logging.info(f"Calculated model: n={len(results)}")
+    return results

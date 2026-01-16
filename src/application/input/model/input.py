@@ -24,62 +24,43 @@ from infrastructure.config.config import CONFIG
 
 MSG_TOO_BIG = "Input value too big. Max={} Given={}"
 MSG_TOO_SMALL = "Input value too small. Min={} Given={}"
-MSG_CONVERT = "Input value can not be converted to Scalar. Value={} Unit={}"
+MSG_CONVERT = "Input value can not be converted to Scalar. Given={}"
 
 
 class Input:
-    """
-    A class storing user-provided properties of simulation.
-    Attributes
-    ----------
-    tilt : float
-        Tilt of the plane (radians).
-    mass : float
-        Mass of the block.
-    velocity : Vector
-        Starting velocity of the block.
-    friction : float
-        Coulomb friction coefficient between the block and the plane.
+    """A class storing constants of simulation.
+
+    Attributes:
+        tilt: Scalar: A tilt angle of the plane.
+        mass: Scalar: A mass of the point.
+        velocity: Vector: A start velocity of the point.
+        friction: Scalar: A friction coefficient between the plane and the point.
+
     """
 
-    def __init__(self, _tilt: Scalar, _mass: Scalar, _velocity: Vector, _friction: Scalar):
+    def __init__(self, tilt: Scalar, mass: Scalar, velocity: Vector, friction: Scalar):
+        """Class constructor.
+
+        :param tilt: Scalar
+        :param mass: Scalar
+        :param velocity: Vector
+        :param friction: Scalar
+
         """
-        Class constructor.
-        Parameters
-        ----------
-        _tilt: Scalar
-            Tilt of the plane (radians).
-        _mass: Scalar
-            Mass of the block (kilograms).
-        _velocity: Vector
-            Starting velocity of the block (m/s).
-        _friction: Scalar
-            Coulomb friction coefficient between the block and the plane.
-        """
-        self.tilt = _tilt
-        self.mass = _mass
-        self.velocity = _velocity
-        self.friction = _friction
+        self.tilt: Scalar = tilt
+        self.mass: Scalar = mass
+        self.velocity: Vector = velocity
+        self.friction: Scalar = friction
 
     @classmethod
     def user(cls, tilt: str, mass: str, velocity: str, friction: str):
-        """
-        Creates Input instance from user input.
-        Parameters
-        ----------
-        tilt: str
-            Tilt from user's input.
-        mass: str
-            Mass from user's input.
-        velocity: str
-            Velocity from user's input.
-        friction: str
-            Friction from user's input.
+        """Creates Input instance from unparsed input.
 
-        Returns
-        -------
-        input: Input
-            Input instance.
+        :param tilt: str: Unparsed tilt.
+        :param mass: str: Unparsed mass.
+        :param velocity: str: Unparsed velocity.
+        :param friction: str: Unparsed friction.
+        
         """
         try:
             s_tilt = parse_scalar(tilt, CONFIG.unit.tilt, CONFIG.input.min_tilt, CONFIG.input.max_tilt)
@@ -107,23 +88,20 @@ class Input:
         return cls(s_tilt, s_mass, s_vel, s_friction)
 
     @classmethod
-    def simulation(cls, _user_input):
-        """
-        Converts Input object so it is ready for simulation.
-        :param _user_input: User's Input.
-        :returns: Input instance.
+    def simulation(cls, user_input):
+        """Converts parsed Input object for the simulation.
+
+        :param user_input: Input: The user's input.
+
         """
         return cls(
-            _user_input.tilt,
-            _user_input.mass * CONFIG.scale,
-            _user_input.velocity * CONFIG.scale,
-            _user_input.friction
+            user_input.tilt,
+            user_input.mass * CONFIG.scale,
+            user_input.velocity * CONFIG.scale,
+            user_input.friction
         )
 
     def __str__(self):
-        """
-        Converts to string.
-        """
         return (f"Input(tilt={self.tilt} "
                 f"mass={self.mass} "
                 f"velocity={self.velocity} "
@@ -131,6 +109,12 @@ class Input:
 
 
 def convert_to_scalar(string: str, unit: str | None) -> Scalar:
+    """Converts unparsed scalar value to Scalar.
+
+    :param string: str: Unparsed value.
+    :param unit: (str | None): Unit.
+    :returns: Scalar
+    """
     str_list = list(string)
     pi_n = 0
     for i in range(0, len(str_list)):
@@ -145,10 +129,17 @@ def convert_to_scalar(string: str, unit: str | None) -> Scalar:
     except ValueError as e:
         logging.error(f"ValueError: {e}")
         logging.error(f"Input value can not be converted to Scalar: string={string} unit={unit}")
-        raise InputParsingError.no_field(MSG_CONVERT.format(string, unit))
+        raise InputParsingError.no_field(MSG_CONVERT.format(string))
 
 
 def check_bounds(scalar: Scalar, floor_bound: float | None, ceil_bound: float | None) -> None:
+    """Checks if Scalar is within given bounds.
+
+    :param scalar: Scalar: Checked value.
+    :param floor_bound: (float | None): < scalar
+    :param ceil_bound: (float | None): > scalar
+
+    """
     if floor_bound is not None:
         if scalar <= floor_bound:
             logging.error(f"Input value too small: min={floor_bound} given={scalar}")
@@ -159,44 +150,25 @@ def check_bounds(scalar: Scalar, floor_bound: float | None, ceil_bound: float | 
             raise InputParsingError.no_field(MSG_TOO_BIG.format(ceil_bound, scalar.value))
 
 
-def parse_scalar(value: str, unit: str | None, min_value: float | None, max_value: float | None) -> Scalar:
-    """
-    Parses scalar value from user input.
-    Parameters
-    ----------
-    value: str
-        User's input value.
-    unit: str | None
-        Expected unit of value.
-    min_value: float | None,
-        Minimum value.
-    max_value: float | None
-        Maximum value.
+def parse_scalar(value: str, unit: str | None, bigger_than: float | None, smaller_than: float | None) -> Scalar:
+    """Parses scalar value.
 
-    Returns
-    -------
-    value: Scalar
-        Parsed value.
+    :param value: str: Unparsed value.
+    :param unit: (str | None): Value's unit.
+    :param bigger_than: (float | None): Must be bigger than value.
+    :param smaller_than: (float | None): Must be smaller than value.
+
     """
     scalar = convert_to_scalar(value, unit)
-    check_bounds(scalar, min_value, max_value)
+    check_bounds(scalar, bigger_than, smaller_than)
     return scalar
 
 
 def parse_velocity(velocity: str, tilt: Scalar) -> Vector:
-    """
-    Parses velocity from user input.
-    Parameters
-    ----------
-    velocity: str
-        User's velocity input.
-    tilt: Scalar
-        Tilt of plane.
+    """Parses velocity.
 
-    Returns
-    -------
-    velocity: Vector
-        Parsed user's velocity.
+    :param velocity: str: Unparsed velocity.
+    :param tilt: Scalar: A tilt angle of the plane.
     """
     scalar = convert_to_scalar(velocity, CONFIG.unit.velocity)
     check_bounds(scalar, CONFIG.input.min_velocity, CONFIG.input.max_velocity)

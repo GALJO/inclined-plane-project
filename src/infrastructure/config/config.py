@@ -26,6 +26,8 @@ from infrastructure.config.unit_config import UnitConfig
 
 
 class Config:
+    """Class contains a config."""
+
     def __init__(self, math_precision: int,
                  measure_precision: float,
                  log_port: str,
@@ -57,6 +59,7 @@ class Config:
 
     @classmethod
     def default(cls):
+        """Returns default Config instance."""
         math_precision = 10
         inp: InputConfig = InputConfig("CONSOLE",
                                        0,
@@ -86,6 +89,10 @@ class Config:
         return config
 
     def generate_file(self, path: Path) -> None:
+        """Generates a YAML config file.
+
+        :param path: Path: A target path.
+        """
         logging.debug(f"Generating a default config file: path={path}")
         struct = {}
         struct.setdefault(ConfigName.log.value, {})
@@ -124,6 +131,10 @@ class Config:
         logging.debug(f"Generated a default config file: insides={struct}")
 
     def update(self, path: Path):
+        """Tries to update Config instance based on a YAML file.
+
+        :param path: Path: A target path.
+        """
         logging.info(f"Loading the config from a file: path={path.absolute()}")
         if not path.exists():
             logging.warning(f"A config file does not exists; generating a new one: path={path.absolute()}")
@@ -133,7 +144,10 @@ class Config:
             self.math_precision = get_value(config, ConfigName.math_precision)
             self.measure_precision = get_value(config, ConfigName.measure_precision)
             self.log_port = get_value(config, ConfigName.log, ConfigName.port)
-            self.log_path = Path(get_value(config, ConfigName.log, ConfigName.path))
+            if self.log_port == "FILE":
+                self.log_path = Path(get_value(config, ConfigName.log, ConfigName.path))
+            else:
+                self.log_path = None
             self.log_level = get_value(config, ConfigName.log, ConfigName.level)
             self.output_path = Path(get_value(config, ConfigName.output, ConfigName.path))
             self.output_port = get_value(config, ConfigName.output, ConfigName.port)
@@ -157,6 +171,13 @@ class Config:
 
 
 def get_value(config: dict, *names: ConfigName):
+    """Gets a value from a config dict loaded from YAML.
+
+    :param config: dict: A config YAML dict.
+    :param names: ConfigName: (args) A YAML path to a value (group, group, ..., value).
+
+    :returns: Config value.
+    """
     value = config
     log_name = ""
     for name in names:

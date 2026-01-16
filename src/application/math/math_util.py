@@ -3,24 +3,26 @@ from infrastructure.config.config import CONFIG
 
 
 def translate_abs(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float, Scalar | float]:
-    """
-    Absolutely translates point in coordinate system starting in bottom-left screen corner
-    to point in pygame coordinate system and vice versa. [x, y] vector changes sense, direction and value.
-    :param x: point x-coordinate
-    :param y: point y-coordinate
-    :returns: (x, y) - translated coordinate
+    """Absolutely translates point from/to coordinate system starting in bottom-left corner of the screem
+    to/from coordinate system starting in upper-left corner of the screen. The (x y) vector changes its value.
+
+    :param x: Scalar | float: X coordinate
+    :param y: Scalar | float: X coordinate
+    :returns: (x, y) - translated coordinates
     :rtype: tuple[float, float]
+
     """
     return x, y * -1 + CONFIG.resolution[1]
 
 
 def translate(x: Scalar | float, y: Scalar | float) -> tuple[Scalar | float, Scalar | float]:
-    """
-    Relatively translates point in coordinate system starting in bottom-left screen corner
-    to point in pygame coordinate system and vice versa. [x, y] vector changes only sense and direction.
-    :param x: vector x-coordinate
-    :param y: vector y-coordinate
-    :returns: (x, y) - translated coordinate
+    """Relatively translates point from/to coordinate system starting in bottom-left corner of the screem
+    to/from coordinate system starting in upper-left corner of the screen. The (x y) vector saves its value.
+
+    :param x: Scalar | float: X coordinate
+    :param y: Scalar | float: X coordinate
+    :returns: (x, y) - translated coordinates
     :rtype: tuple[float, float]
+
     """
     return x, y * (-1)

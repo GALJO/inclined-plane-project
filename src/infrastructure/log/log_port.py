@@ -17,12 +17,9 @@ from abc import abstractmethod, ABC
 
 
 class LogPort(ABC):
-    """
-    Abstract class for logging setup.
-    """
+    """Abstract class for logging setup."""
+
     @abstractmethod
     def setup(self):
-        """
-        Activates logging.
-        """
+        """Activates logging."""
         pass

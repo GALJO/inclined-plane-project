@@ -13,23 +13,10 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-import logging
+from pathlib import Path
 
-FORMAT = "[%(asctime)s] [%(levelname)s] || [%(funcName)s] %(filename)s :: %(message)s"
+from infrastructure.config.config import CONFIG
 
 
-def get_level(level: str):
-    match level:
-        case "DEBUG":
-            return logging.DEBUG
-        case "INFO":
-            return logging.INFO
-        case "WARN":
-            return logging.WARN
-        case "ERROR":
-            return logging.ERROR
-        case "CRITICAL":
-            return logging.CRITICAL
-        case _:
-            logging.critical("EXIT -- unknown log level.")
-            exit(1)
+def pytest_configure(config):
+    CONFIG.update(Path("test-config.yaml"))

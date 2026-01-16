@@ -13,15 +13,20 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 """
-
 from application.input.model.input_field import InputField
 
 
 class InputParsingError(Exception):
+    """Exception raised when the input cannot be parsed due to wrong data given by the user.
+    Attributes:
+        desc: str: Description of the exception.
+        field: InputField: Field that exception refers to.
+    """
+    CODE = "IPE"
+
     def __init__(self, _desc: str, field: InputField | None):
         self.desc = _desc
         self.field = field
-        self.code = "Inp.Par"
 
     @classmethod
     def no_field(cls, _desc: str):

@@ -17,6 +17,7 @@ from enum import Enum
 
 
 class InputField(Enum):
+    """Defines names of input fields for exception handling."""
     TILT = "TILT"
     MASS = "MASS"
     VELOCITY = "VELOCITY"

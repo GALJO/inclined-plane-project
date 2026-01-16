@@ -17,12 +17,17 @@ import logging
 
 
 def catcher(f):
+    """Wrapper that catches any unhandled exception.
+
+    :param f: Function.
+    """
+
     def wrap():
         try:
             logging.debug("The Catcher: awaiting disturbance.")
             f()
         except Exception as e:
-            logging.critical("The Catcher: unexpected disturbance detected -- SHUTTING DOWN.")
+            logging.critical("The Catcher: unexpected disturbance detected!")
             logging.critical("!!!!!!!!!!!!!!!!!!!!!!!! CRASH !!!!!!!!!!!!!!!!!!!!!!!!")
             logging.critical(e, exc_info=True)
             logging.critical("!!!!!!!!!!!!!!!!!!!!!!!! CRASH !!!!!!!!!!!!!!!!!!!!!!!!")

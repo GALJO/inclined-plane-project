@@ -1,27 +1,27 @@
 # InclinedPlaneProject
 
-### 0. The introduction.
+### 0. Introduction.
 
-The InclinedPlane is a program that simulates the physics scenario of a mass point moving on an inclined plane. It
-calculates a model based on physic's formulas, runs a simulation based on the *Pymunk* physics engine and returns
+The InclinedPlane is a program that simulates a scenario of a mass point moving on an inclined plane. It
+calculates a model based on physics formulas, runs a simulation based on the *Pymunk* physics engine and returns
 comparative data.
 
 #### Contents:
 
-1. [The scenario.](#1-the-scenario)
+1. [Scenario.](#1-scenario)
 2. a. [Input.](#2a-input)  
    b. [Output.](#2b-output)
-3. [The theoretical model.](#3-the-theoretical-model)
+3. [Theoretical model.](#3-theoretical-model)
 4. [How to set up dev's environment.](#5-how-to-set-up-devs-environment)
 5. [License.](#6-license)
 
-### 1. The scenario.
+### 1. Scenario.
 
 <hr>  
-In this section, you can learn about the scenario of the program. It does not contain a detailed physics description and scaaarrry formulas :), only necessary descriptions and schemas.  
+In this section, you can learn about the scenario of the program. It does not contain a detailed physics description and scaaarrry formulas :), only necessary descriptions and schemes.  
 <hr>  
 
-The scenario is a set of cycles. A **cycle** is a repeating set of events in the scenario. One cycle has 3 stages:
+A scenario is a set of cycles. A **cycle** is a repeating set of events in the scenario. One cycle has 3 stages:
 
 ![scheme 1.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme1.jpg)  
 (scheme 1. - the start of a cycle)
@@ -38,7 +38,7 @@ The scenario is a set of cycles. A **cycle** is a repeating set of events in the
 ![scheme 3.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme3.jpg)  
 (scheme 3. - the end of a cycle)
 
-- 3rd stage - The block is about to collide with the wall. After the collision, the scenario is back in the 1st stage of
+- 3rd stage - The block is about to collide with the wall. After a collision, the scenario is back in the 1st stage of
   the next cycle. A process from the 1st to the 3rd stage is called a **full cycle**, and it repeats until the block (
   almost) stops. The scenario is defined as a set of full cycles.
 - 2nd stage termination - The friction is too big to the block to slide down the plane. The block stops in the 2nd
@@ -48,55 +48,57 @@ The scenario is a set of cycles. A **cycle** is a repeating set of events in the
 ### 2a. Input.
 
 <hr>  
+
 In this section you will learn what data the user must provide.
+
 <hr>  
 
-- **Tilt ($\theta$) --** (default range: $0 < \theta < \frac{\pi}{2}$ unit: $rad$) -- The tilt angle of the surface,
-- **Mass ($m$) --** (default range: $0 < m < \infty$ unit: $kg$) -- The mass of the point,
-- **Start speed ($v$) --** (default range: $0 < v < \infty$ unit: $\frac{m}{s}$) -- The 1st cycle's start velocity value (
+- **Tilt ($\theta$)** (default range: $0 < \theta < \frac{\pi}{2}$ unit: $rad$) - The tilt angle of the surface,
+- **Mass ($m$)** (default range: $0 < m < \infty$ unit: $kg$) - The mass of the point,
+- **Start speed ($v$)** (default range: $0 < v < \infty$ unit: $\frac{m}{s}$) - The 1st cycle's start velocity value (
   velocity is parallel to the surface),
-- **Friction ($\mu$) --** (default range: $0 < \mu < \infty$) -- The Coulomb's friction coefficient between the point and
+- **Friction ($\mu$)** (default range: $0 < \mu < \infty$) - Coulomb's friction coefficient between the point and
   the surface.
 
 ### 2b. Output.
 
 <hr>  
+
 In this section you will learn what data program returns to the user.  
+
 <hr>  
 
-~~For now~~ There is only one output form - the .csv file. Each **row** contains data for the one cycle.  
-One row contains ~~too much~~ just enough data about the simulation outcome.
+~~For now~~ There is only one output form available - the .csv file. 
+One row contains data for one cycle.
 
-There are three main sections in the CSV table - each of them are labeled by a header fix:
+#### CSV table structure
 
-1. `*_measured` -- Simulation's results (measured during simulation).
-2. `*_model` -- Model results (calculated using formulas).
-3. `*_[abs/rel]_error_` -- Measurement errors (how much simulation's results are apart from physics formulas).  
-   While the `abs` fix means an absolute error, the `rel` fix means a relative error.
+There are 50 output values for each cycle. We distinguish 6 main groups of values:
+- `duration1` - duration from 1st to 2nd cycle stage data.
+- `duration2` - duration from 2nd to 3rd cycle stage data.
+- `duration` - full duration of the cycle data.
+- `start_velocity_[x/y/value]` (vector) - start velocity of the cycle data.
+- `end_velocity_[x/y/value]` (vector) - end velocity of the cycle data.
+- `reach_[x/y/value]` (vector) - distance traveled from 1st to 2nd cycle stage data.
 
-In each section the `*` symbol means 6 values:
+Each group distinguish 4 values recognized by suffixes:
 
-- `duration1` -- The duration between 1st and 2nd stage of the cycle.
-- `duration2` -- The duration between 2nd and 3rd stage of the cycle.
-- `duration` -- The duration of full cycle.
-- `start_velocity_[x/y/value]` **(V)** -- The velocity in 1st stage of the cycle.
-- `end_velocity_[x/y/value]` **(V)** -- The velocity in 3rd stage of the cycle.
-- `reach_[x/y/value]` **(V)** -- The distance traveled by the point between 1st and 2nd stage of the cycle.
+- `[group]_measured` - output from simulation.
+- `[group]_model` - output from calculated physics model.
+- `[group]_error` - error (difference between measured and model values).
+- `[group]_rerror` - relative error based on error.
 
-**(V)** -- It is the vector value, so it has 3 fields - XY coordinates and the vector's value.
+There are additional 2 not grouped values:
+- `cycle_number` - The number of cycle (starting from 1).
+- `is_full` - True if the cycle is full, false otherwise.
 
-Additional values:
-`cycle_number` - number of the cycle starting from 1.  
-`is_full` - True if the cycle is full, else False.
-
-All these headers sum up to outstanding **50** values for each cycle!
-
-### 3. The theoretical model.
+### 3. Theoretical model.
 
 <hr>
 
 Fair warning, this section is intended for ~~physics geeks~~ anyone, who wants to know more about  
 physics model of the scenario. I recommend to start with reading other sections.
+
 <hr>  
 
 Let us introduce the notation for variables and constants.
@@ -105,12 +107,12 @@ A **cycle** is defined in **The scenario** section.
 
 #### Variables.
 
-- $\vec{v_{k0}}$ - The start velocity of the $k$-th cycle.
-- $\vec{v_{k1}}$ - The end velocity of the $k$-th cycle (hereinafter referred to as the *$k$-th end velocity*).
-- $\vec{x_{k}}$ - The displacement vector of the point between the 1st and the 2nd step of the $k$-th cycle.
-- $t_{k1}$ - The time elapsed between the 1st and the 2nd step of the $k$-th cycle.
+- $\vec{v_{k0}}$ - The start velocity of $k$-th cycle.
+- $\vec{v_{k1}}$ - The end velocity of $k$-th cycle (hereinafter referred to as *$k$-th end velocity*).
+- $\vec{x_{k}}$ - The displacement vector of the point between the 1st and the 2nd step of $k$-th cycle.
+- $t_{k1}$ - The time elapsed between the 1st and the 2nd step of $k$-th cycle.
 - $t_{k2}$ - The time elapsed between the 2nd and the 3rd step of $k$-th cycle.
-- $t_{k}$ - The full duration of the $k$-th cycle.
+- $t_{k}$ - The full duration of $k$-th cycle.
 
 #### Constants.
 
@@ -131,7 +133,7 @@ $\vec{k} = [k_x, k_y]$
 <hr>  
 
 ![scheme 4.](https://raw.githubusercontent.com/GALJO/inclined-plane-project/refs/heads/master/doc/scheme1.jpg)  
-(scheme 4. - the start of the $k$-th cycle)
+(scheme 4. - the start of $k$-th cycle)
 
 The static, tilted surface is hereinafter referred to as the *plane*.  
 The static, perfectly elastic surface, normal to the plane is hereinafter referred to as the *wall*.  
@@ -141,10 +143,10 @@ $\vec{T}$ - The friction force between the point and the plane.
 $\vec{Q}$ - The point's gravity force.  
 $\vec{R}$ - The plane's reaction force to the normal of the point's gravity force.
 
-Between the end of any $k$-th cycle and the start of the $(k+1)$-th cycle one and only event is the perfectly elastic
+Between the end of any $k$-th cycle and the start of $(k+1)$-th cycle one and only event is the perfectly elastic
 collision between the point and the wall. According to collision's mechanics:  *A perfectly elastic collision is defined
 as one in which there is no loss of kinetic energy in the collision.*[^1]. As the wall is the static object ($E=0$), the
-kinetic energy of the point is equal at the end of the $k$-th cycle and start of the $(k+1)$-th cycle. Therefore, there
+kinetic energy of the point is equal at the end of $k$-th cycle and start of $(k+1)$-th cycle. Therefore, there
 is a recurrence relation between adjacent _cycles_ that can be expressed as[^2]:
 
 <div style="text-align: center;">  
@@ -178,8 +180,8 @@ $t_{k+1} = t_{(k+1)1} + t_{(k+1)2}$ &ensp;&ensp; $(6)$
 
 </div>  
 
-Using formulas $(1)$ - $(6)$ we obtain full model data for the $(k+1)$-th cycle  
-knowing only constants and the $k$-th end velocity.
+Using formulas $(1)$ - $(6)$ we obtain full model data for $(k+1)$-th cycle  
+knowing only constants and $k$-th end velocity.
 
 There is a corner case when the $\vec{T}$ value is bigger than the horizontal $\vec{Q}$ value.  
 In this situation, in the 2nd stage the $\vec{T}$ transforms to the static friction $\vec{T_s}$ and the point stops
@@ -189,38 +191,55 @@ moving. This happens if and only if the following formula is true:
 
 $\frac{\mu\cos{\theta}}{sin{\theta}} \geq 1$ &ensp;&ensp; (7)
 
-</div>  
+</div>
+
 <hr>
 
 #### The theoretical model in practice.
 
 - $(1)$ - $(6)$ recurrence formulas are being used to prepare the theoretical model of scenario,
 - The $\vec{v_{01}}$ is provided by the user,
-- Cycles are being counted until the $n$-th end velocity is (close to) zero,
+- Cycles are being counted until $k$-th end velocity is (close to) zero,
 - Before counting cycles, it is checked if the not full cycle occurred based on the $(7)$ formula,
 - The simulation's results are being predicted based on the theoretical model.
 
+#### Sources
+[^1]: [Elastic and Inelastic Collisions](http://hyperphysics.phy-astr.gsu.edu/hbase/elacol.html) (Access: 11.12.2025)
+
+[^2]: [Kinetic Energy](http://hyperphysics.phy-astr.gsu.edu/hbase/ke.html) (Access: 11.12.2025)
+
+[^3]: [Conservation Laws](http://hyperphysics.phy-astr.gsu.edu/hbase/conser.html) (Access: 11.12.2025)
+
+[^4]: [Coulomb Friction](https://www.sciencedirect.com/topics/engineering/coulomb-friction) (Access: 11.12.2025)
+
+[^5]: [Work Done by a Force](https://www.monash.edu/student-academic-success/physics/relationships-between-force,-energy-and-mass/work-done-by-a-force) (Access: 11.12.2025)
+
+[^6]: [Newton’s Laws of Motion](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/#newtons-first-law-inertia) (Access: 11.12.2025)
+
+
 ### 4. The simulation's details.
 
-<hr>  
-In this section you can learn some technical facts and issues with the simulation in the program.  
+<hr> 
+
+In this section you can learn some technical facts and issues with a simulation in the program.  
+
 <hr>  
 
-The simulation run on the *[Pymunk](https://www.pymunk.org)* physics engine and the *[Pygame](https://www.pygame.org)*
-graphical interface.  
+A simulation runs on the *[Pymunk](https://www.pymunk.org)* physics engine and the *[Pygame](https://www.pygame.org)* graphical interface.  
 In the simulation the mass point is replaced with the homogeneous block with infinite inertia, which  
 is good approximation of the mass point in physics.
 
 A main objective of the simulation is to visualize the scenario for user. Therefore, the simulation  
 is scaled up, because it does not look good with real numbers. However, proportions are kept and  
-the program *unscales* simulation's measurements and final results are not scaled.
-
-If the user uses too big starting velocity, block may fall out of the simulation due to the limitations of the space.
+the program *unscales* simulation's measurements and final results are 1:1 with model. 
+A scale can be changed via the config file.
 
 ### 5. How to set up dev's environment.
 
 <hr>  
+
 This section is for developers, who want to set up their own development environment.     
+
 <hr>  
 
 #### Prerequisites.
@@ -236,14 +255,14 @@ so a setup is nice and easy. Just follow these steps:
 1. Install the *Pipenv* with the Python's pip module.
 
 ```
-python -m pip install pipenv=2026.0.*
+python3.14 -m pip install pipenv=2026.0.*
 ```
 
 2. Set up a Pipenv shell in the repo folder.
 
 ```
 cd [path to repo]
-pipenv shell --python 3.14
+python3.14 -m pipenv shell --python 3.14
 ```
 
 3. While in the Pipenv shell install all packages.
@@ -255,7 +274,7 @@ pipenv update
 4. Run `main.py`.
 
 ```
-python src/main.py
+python3.14 src/main.py
 ```
 
 Happy coding!
@@ -263,11 +282,11 @@ Happy coding!
 #### Back again
 
 Let's say you completed your first setup, turned off the computer and went for some ***power nap***.  
-How to get back to the environment? It's easy:
+How to get back to work? It's easy:
 
 ```  
 cd [path to repo]  
-pipenv shell  
+python 3.14 -m pipenv shell  
 python src/main.py  
 ```  
 
@@ -276,7 +295,9 @@ Voilà! Happy coding!
 ### 6. License
 
 <hr>  
+
 This section describes licensing of the software.  
+
 <hr>
 
 This software is licensed under the ***[Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0)*** license. For easy
@@ -298,16 +319,3 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
 or implied. See the License for the specific language governing
 permissions and limitations under the License.
 
-[^1]: [Elastic and Inelastic Collisions](http://hyperphysics.phy-astr.gsu.edu/hbase/elacol.html) (Access: 11.12.2025)
-
-[^2]: [Kinetic Energy](http://hyperphysics.phy-astr.gsu.edu/hbase/ke.html) (Access: 11.12.2025)
-
-[^3]: [Conservation Laws](http://hyperphysics.phy-astr.gsu.edu/hbase/conser.html) (Access: 11.12.2025)
-
-[^4]: [Coulomb Friction](https://www.sciencedirect.com/topics/engineering/coulomb-friction) (Access: 11.12.2025)
-
-[^5]: [Work Done by a Force](https://www.monash.edu/student-academic-success/physics/relationships-between-force,-energy-and-mass/work-done-by-a-force) (
-Access: 11.12.2025)
-
-[^6]: [Newton’s Laws of Motion](https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/newtons-laws-of-motion/#newtons-first-law-inertia) (
-Access: 11.12.2025)

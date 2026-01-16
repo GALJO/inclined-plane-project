@@ -17,6 +17,7 @@ import csv
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
 from application.math.scalar import Scalar
 from application.math.vector import Vector
@@ -35,31 +36,34 @@ REACH = "reach"
 
 SUFFIX_MEASURED = "_measured"
 SUFFIX_MODEL = "_model"
-PREFIX_ERROR = "error_"
-PREFIX_RELATIVE_ERROR = "error_rel_"
+SUFFIX_ERROR = "_error"
+SUFFIX_REL_ERROR = "_rerror"
 SUFFIX_VALUE = "_value"
 SUFFIX_X = "_x"
 SUFFIX_Y = "_y"
 
 
 class CsvOutputAdapter(OutputPort):
-    """
-    OutputPort adapter for saving data to CSV file.
+    """OutputPort adapter for saving an output to a CSV file.
+
     Attributes
     ----------
-    path: Path
-        Path object specifying path to CSV output file.
+    path: Path: Path to the target file.
     """
 
     def __init__(self, output_path: Path):
+        """Constructor.
+
+        :param output_path: Path: Path to the target file.
+        """
         self.path: Path = output_path
 
     def send_output(self, measured: list[Result], model: list[Result], error: list[Error]) -> None:
-        """
-        Saves output to CSV file specified in path
-        :param measured: A list of measured Result objects.
-        :param model: A list of model Result objects.
-        :param error: A list of Error objects for given Result objects.
+        """Parses output to a CSV table and saves it to a target file.
+
+        :param measured: list[Result]: Results from a simulation.
+        :param model: list[Result]: Results from a model.
+        :param error: list[Error]: Errors.
         """
         logging.info(f"Saving results to CSV file: measured={measured} model={model} error={error}")
         os.makedirs(os.path.dirname(self.path.absolute()), exist_ok=True)
@@ -75,51 +79,55 @@ class CsvOutputAdapter(OutputPort):
 
 
 def dictionaries_update(output: tuple, inp: tuple) -> None:
-    """
-    Updates each dictionary in output tuple with corresponding dictionary in inp tuple.
-    :param output: Being updated.
-    :param inp: Update data.
+    """Updates each dictionary from output with corresponding dictionary from inp.
+
+    :param output: tuple: Is updated.
+    :param inp: tuple: Update data.
+
     """
     for i in range(0, len(output)):
         output[i].update(inp[i])
 
 
 def get_any_dict(key: str, data) -> dict:
-    """
-    Creates default dict for CSV output.
-    :param key: Dictionary key (CSV header).
-    :param data: Dictionary value (CSV row).
-    :return: Dictionary (CSV).
+    """Creates CSV dict {key: data}.
+
+    :param key: str: CSV header.
+    :param data: CSV row.
+    :returns: {key: data} dict.
+
     """
     return {key: data}
 
 
 def get_scalar_dicts(key: str, measured: Scalar, model: Scalar, error: ScalarError) -> tuple[
-    dict[str, str], dict[str, str], dict[str, str]]:
-    """
-    Creates dict from Scalar data for CSV output.
-    :param key: Scalar value name (CSV headers).
-    :param measured: Measured Scalar (CSV row).
-    :param model: Model Scalar (CSV row).
-    :param error: ScalarError object for given Scalars (CSV row).
-    :return: Measure, model and error dictionary.
+    dict[str, float], dict[str, float], dict[str, Any]]:
+    """Creates a CSV dict for Scalar values group.
+
+    :param key: str: CSV header for group.
+    :param measured: Scalar: Measured value.
+    :param model: Scalar: Model value.
+    :param error: ScalarError: Errors.
+    :returns: Dictionaries {key_measured: measured} {key_model: model} {key_error: error.abs, key_rerror: error.rel}
+
     """
     return (
         {key + SUFFIX_MEASURED: measured.value},
         {key + SUFFIX_MODEL: model.value},
-        {PREFIX_ERROR + key: error.abs.value, PREFIX_RELATIVE_ERROR + key: error.rel.value}
+        {key + SUFFIX_ERROR: error.abs.value, key + SUFFIX_REL_ERROR: error.rel.value}
     )
 
 
 def get_vector_dicts(key: str, measured: Vector, model: Vector, error: VectorError) -> tuple[
     dict[str, str], dict[str, str], dict[str, str]]:
-    """
-    Creates dict from Vector data for CSV output.
-    :param key: Vector value name (CSV headers).
-    :param measured: Measured Vector (CSV row).
-    :param model: Model Vector (CSV row).
-    :param error: VectorError object for given Vectors (CSV row).
-    :return: Measure, model and error dictionary.
+    """Creates a CSV dict for Vector values group.
+
+    :param key: str: CSV header for group.
+    :param measured: Vector: Measured value.
+    :param model: Vector: Model value.
+    :param error: VectorError: Errors.
+    :returns: Dictionaries {[measured values]} {[model values]} {[error values]}
+
     """
     measure_dict = {}
     model_dict = {}
@@ -134,12 +142,12 @@ def get_vector_dicts(key: str, measured: Vector, model: Vector, error: VectorErr
 
 
 def get_dict(measured: Result, model: Result, error: Error) -> dict:
-    """
-    Creates a dict from Result data for CSV output.
-    :param measured: Measured Result.
-    :param model: Model Result
-    :param error: Results Error object.
-    :return: Dictionary ready for CSV parsing.
+    """Creates a full CSV row dict.
+
+    :param measured: Result: Measured.
+    :param model: Result: Model.
+    :param error: Error: Errors.
+    :returns: Dictionary representing one CSV row.
     """
     result = {}
     measure_dict = {}
